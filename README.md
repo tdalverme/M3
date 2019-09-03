@@ -1,2 +1,2 @@
-# M3
+# Tacho Smart
 Tacho de basura inteligente
