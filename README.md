@@ -12,7 +12,7 @@ Preparación de tragos automatizada.
  - Rodriguez, Maximiliano Pablo (maxiprodriguez)
  
  ## Descripción del proyecto
- Este proyecto consiste en un dispositivo que prepara tragos y da consejos al usuario a partir de su historial de consumos y sus datos personales.
+ Este proyecto consiste en un dispositivo que prepara tragos y crea perfiles a cada usuario de acuerdo a sus preferencias.
  ## Objetivos del Sistema
  El trago ideal no existe, pero si existe el mejor trago para cada persona. El objetivo de Smart Barman es obtener las medidas del trago ideal del usuario y prepararselo.
  
