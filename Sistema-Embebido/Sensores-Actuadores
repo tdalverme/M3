@@ -1,0 +1,14 @@
+Sensores
+
+Balanza: para realizar la medición de la cantidad de líquido.
+Botón: para interactuar con el display y poder seleccionar la bebida a realizar.
+Sensor de temperatura: para medir si la bebida se encuentra fría o caliente.
+Sensor de ultrasonido: para sensar que haya un vaso antes de comenzar a servir la bebida.
+
+
+Actuadores
+
+Bombas de agua: se encargarán de llenar el vaso.
+Relé: para poder intercambiar entre las distintas bombas de agua.
+Display: para visualizar los tipos de bebidas que el sistema puede realizar.
+Led: para indicar los distintos estados del sistema (preparando trago, trago listo, etc.)
