@@ -34,3 +34,12 @@ El usuario deberá seleccionar en la aplicación Android el trago que desea toma
 ![Diagrama Funcional](https://b.imge.to/2019/09/23/vTNCMH.jpg)
 ### Diagrama Físico
 ![Diagrama Físico](https://b.imge.to/2019/09/23/vTNsIH.jpg)
+### Esquema Físico
+#### Vista Frontal
+![Vista Frontal](https://b.imge.to/2019/09/23/vTdidt.jpg)
+
+
+#### Vista Lateral
+![Vista Lateral](https://b.imge.to/2019/09/23/vTdDPy.jpg)
+### Diagrama de Conexión
+![Diagrama Físico](https://a.imge.to/2019/09/23/vTdWLx.jpg)
