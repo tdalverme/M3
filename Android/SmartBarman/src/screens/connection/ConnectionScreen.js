@@ -24,6 +24,7 @@ const styles = StyleSheet.create({
   },
   welcome: {
     fontSize: 24,
+    color: 'black',
     textAlign: 'center',
     margin: 10,
   },
@@ -46,7 +47,8 @@ class ConnectionScreen extends PureComponent {
     data: '',
     connected: false,
     processing: false,
-    message: 'No estas conectado al Smart Barman'
+    message: 'No estas conectado al Smart Barman',
+    isEnabled: false,
   };
 
   async componentDidMount() {
@@ -55,19 +57,20 @@ class ConnectionScreen extends PureComponent {
     this.findDevices();
 
     this.events.on("bluetoothEnabled", () => {
-      ToastAndroid.show("Bluetooth enabled", ToastAndroid.SHORT);
+      ToastAndroid.show("Bluetooth activado.", ToastAndroid.SHORT);
+      this.findDevices();
       this.setState({ isEnabled: true });
     });
 
     this.events.on("bluetoothDisabled", () => {
-      ToastAndroid.show("Bluetooth disabled", ToastAndroid.SHORT);
-      this.setState({ isEnabled: false });
+      ToastAndroid.show("Bluetooth desactivado.", ToastAndroid.SHORT);
+      this.setState({ isEnabled: false, connected: false });
     });
 
     this.events.on("connectionSuccess", ({ device }) => {
       if (device) {
         ToastAndroid.show(
-          '¡Conectado al SmartBarman!',
+          '¡Conectado a SmartBarman!',
           ToastAndroid.SHORT
         );
       }
@@ -75,17 +78,14 @@ class ConnectionScreen extends PureComponent {
 
     this.events.on("connectionFailed", ({ device }) => {
       if (device) {
-        ToastAndroid.show(
-          `Failed to connect with device ${device.name}<${device.id}>`,
-          ToastAndroid.SHORT
-        );
+        ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
       }
     });
 
     this.events.on("connectionLost", ({ device }) => {
       if (device) {
         ToastAndroid.show(
-          `Device ${device.name}<${device.id}> connection has been lost`,
+          'Se perdió la conexión con SmartBarman',
           ToastAndroid.SHORT
         );
       }
@@ -109,28 +109,31 @@ class ConnectionScreen extends PureComponent {
 
   findDevices = async () => {
     try {
-      this.setState({ processing: true, message: 'Buscando al SmartBarman' });
+      this.setState({ processing: true, message: 'Buscando a SmartBarman' });
       const [isEnabled, devices] = await Promise.all([
         BluetoothSerial.isEnabled(),
         BluetoothSerial.list()
       ]);
+      this.setState({isEnabled, processing: isEnabled});
+      if(isEnabled) {
+        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
 
-      const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
+        if(arduinoBluetooth) {
+          this.setState({device: arduinoBluetooth});
+          this.connect(arduinoBluetooth.id);
 
-      if(arduinoBluetooth) {
-        this.setState({device: arduinoBluetooth});
-        this.connect(arduinoBluetooth.id);
-
-      } else {
-        ToastAndroid.show('No se encontró el arduino, asegurese que el smartbarman esté conectado.');
+        } else {
+          ToastAndroid.show('No se encontró el dispositivo, asegurese que SmartBarman esté conectado.');
+        }
       }
+
     } catch (e) {
       ToastAndroid.show(e.message, ToastAndroid.SHORT);
     }
   }
 
   connect = async id => {
-    this.setState({ processing: true, message: 'Conectandose al SmartBarman' });
+    this.setState({ processing: true, message: 'Conectandose a SmartBarman' });
 
     try {
       const connected = await BluetoothSerial.device(id).connect();
@@ -149,11 +152,11 @@ class ConnectionScreen extends PureComponent {
           "\r\n"
         );
       } else {
-        ToastAndroid.show('No se pudo conectar al SmartBarman.', ToastAndroid.SHORT);
+        ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
         this.setState({ processing: false, connected });
       }
     } catch (e) {
-      ToastAndroid.show('Ocurrió un error al intentar conectarse al SmartBarman.', ToastAndroid.SHORT);
+      ToastAndroid.show('Ocurrió un error al intentar conectarse a SmartBarman.', ToastAndroid.SHORT);
       ToastAndroid.show(e.message, ToastAndroid.SHORT);
       this.setState({ processing: false, connected: false });
     }
@@ -182,7 +185,7 @@ class ConnectionScreen extends PureComponent {
   }
 
   render() {
-    const { processing, connected, message } = this.state;
+    const { processing, connected, message, isEnabled } = this.state;
     const { navigation } = this.props;
     return (
       <View style={styles.container}>
@@ -198,7 +201,7 @@ class ConnectionScreen extends PureComponent {
         }
 
         {
-          connected && !processing &&
+          isEnabled && connected && !processing &&
           <TouchableOpacity
             style={{backgroundColor: 'green', margin: 20}}
             onPress={() => navigation.navigate('Home')}>
@@ -206,12 +209,17 @@ class ConnectionScreen extends PureComponent {
           </TouchableOpacity>
         }
         {
-          !connected && !processing &&
+          isEnabled && !connected && !processing &&
           <TouchableOpacity
             style={{backgroundColor: 'blue', margin: 20}}
             onPress={() => this.findDevices()}>
             <Text style={{color: 'white', padding: 10}}> CONECTAR AL ARDUINO </Text>
           </TouchableOpacity>
+        }
+
+        {
+          !isEnabled &&
+          <Text style={{padding: 10, color: 'black'}}>Debe activar el bluetooth para comenzar.</Text>
         }
 
       </View>
