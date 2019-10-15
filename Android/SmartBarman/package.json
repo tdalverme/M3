@@ -9,8 +9,9 @@
   "dependencies": {
     "react": "16.8.3",
     "react-native": "0.59.5",
-    "react-native-ble-plx": "^1.1.0",
-    "react-navigation": "^4.0.10"
+    "react-native-bluetooth-serial-next": "^1.2.3",
+    "react-native-gesture-handler": "^1.0.16",
+    "react-navigation": "^3.13.0"
   },
   "devDependencies": {
     "@babel/core": "7.6.4",

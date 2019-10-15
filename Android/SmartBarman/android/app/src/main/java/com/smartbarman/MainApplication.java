@@ -3,7 +3,8 @@ package com.smartbarman;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.polidea.reactnativeble.BlePackage;
+import com.swmansion.gesturehandler.react.RNGestureHandlerPackage;
+import com.nuttawutmalee.RCTBluetoothSerial.RCTBluetoothSerialPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -24,7 +25,8 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new BlePackage()
+          new RNGestureHandlerPackage(),
+          new RCTBluetoothSerialPackage()
       );
     }
 
