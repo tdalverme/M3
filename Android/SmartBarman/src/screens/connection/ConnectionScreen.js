@@ -15,6 +15,8 @@ import BluetoothSerial, {
   withSubscription
 } from "react-native-bluetooth-serial-next";
 
+import { findDevices } from '../../utils/Bluetooth';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -110,10 +112,12 @@ class ConnectionScreen extends PureComponent {
   findDevices = async () => {
     try {
       this.setState({ processing: true, message: 'Buscando a SmartBarman' });
+
       const [isEnabled, devices] = await Promise.all([
         BluetoothSerial.isEnabled(),
         BluetoothSerial.list()
       ]);
+
       this.setState({isEnabled, processing: isEnabled});
       if(isEnabled) {
         const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
@@ -140,17 +144,6 @@ class ConnectionScreen extends PureComponent {
 
       if (connected) {
         this.setState({ processing: false, connected });
-
-        BluetoothSerial.read(
-          (data, intervalId) => {
-            console.log(data);
-
-            if (intervalId) {
-              clearInterval(intervalId);
-            }
-          },
-          "\r\n"
-        );
       } else {
         ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
         this.setState({ processing: false, connected });
@@ -204,7 +197,7 @@ class ConnectionScreen extends PureComponent {
           isEnabled && connected && !processing &&
           <TouchableOpacity
             style={{backgroundColor: 'green', margin: 20}}
-            onPress={() => navigation.navigate('Home')}>
+            onPress={() => navigation.navigate('Register')}>
             <Text style={{color: 'white', padding: 10}}> COMENZAR </Text>
           </TouchableOpacity>
         }
@@ -213,7 +206,7 @@ class ConnectionScreen extends PureComponent {
           <TouchableOpacity
             style={{backgroundColor: 'blue', margin: 20}}
             onPress={() => this.findDevices()}>
-            <Text style={{color: 'white', padding: 10}}> CONECTAR AL ARDUINO </Text>
+            <Text style={{color: 'white', padding: 10}}> CONECTARSE </Text>
           </TouchableOpacity>
         }
 

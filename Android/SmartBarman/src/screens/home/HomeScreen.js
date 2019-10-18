@@ -17,9 +17,8 @@ import BluetoothSerial, {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
+    flexDirection: 'column',
+    backgroundColor: 'white',
   },
   welcome: {
     fontSize: 20,
@@ -33,20 +32,27 @@ const styles = StyleSheet.create({
   },
 });
 
-class HomeScreen extends PureComponent {
-  render() {
-
+const GlassDetectedMessage = ({ detected }) => {
+  if(detected) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>HOME SCREEN</Text>
-
+      <View style={{width: '100%', backgroundColor: 'green', flex: 0.1, selfAlign: 'flex-start', alignItems: 'center', justifyContent: 'center'}}>
+        <Text style={{color: 'white', padding: 10 }}> El vaso está en posición </Text>
       </View>
-    );
+    )
   }
+  return (
+    <View style={{width: '100%', backgroundColor: 'red', flex: 0.1, selfAlign: 'flex-start', alignItems: 'center', justifyContent: 'center'}}>
+      <Text style={{color: 'white', padding: 10 }}> Posicione el vaso para comenzar </Text>
+    </View>
+  )
 }
 
+const HomeScreen = ({ glassDetected }) => {
+  return (
+    <View style={styles.container}>
+      <GlassDetectedMessage detected={glassDetected} />
+    </View>
+  );
+}
 
-export default withSubscription({
-    subscriptionName: 'events',
-    destroyOnWillUnmount: true,
-})(HomeScreen);
+export default HomeScreen;
