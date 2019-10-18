@@ -8,9 +8,9 @@ Sistema embebido que prepara tragos de forma automatizada.
  - Dal Verme, Tomas (tdalverme)
  - De Arias, Axel (axeldearias)
  - Figueredo, Nicolas Leandro (nicofigueredo)
- - Quintero, Lucas (lucasq95)
+ - Quinteiro, Lucas (lucasq95)
  - Rodriguez, Maximiliano Pablo (maxiprodriguez)
- 
+
  ## Descripción del Proyecto
  Este proyecto consiste en el desarrollo de un sistema embebido que prepara tragos manteniendo un perfil por cada usuario de acuerdo a sus preferencias.
  ## Objetivos del Sistema
