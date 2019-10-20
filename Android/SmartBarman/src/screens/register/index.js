@@ -5,8 +5,11 @@ import {
   TextInput,
   ActivityIndicator,
   TouchableOpacity,
+  ToastAndroid,
   View
 } from 'react-native';
+
+const Realm = require('realm');
 
 const styles = StyleSheet.create({
   container: {
@@ -42,19 +45,62 @@ const styles = StyleSheet.create({
   },
 });
 
+let realm;
+
 export default class RegisterScreen extends PureComponent {
   state = {
     username: '',
     height: '',
     weight: '',
+    loading: true,
   };
 
-  async componentDidMount() {
+  constructor(props) {
+    super(props);
+    realm = new Realm({ path: 'UserDatabase.realm' });
 
   }
 
-  submit = () => {
+  async componentDidMount() {
+    const { navigation } = this.props;
+    const user = realm.objects('User')[0];
+    if(user && user.username && user.weight && user.height) {
+      navigation.navigate('Home');
+    } else {
+      this.setState({loading: false});
+    }
+  }
 
+  saveInfo = () => {
+    const {
+      username,
+      height,
+      weight
+    } = this.state;
+
+    const obj = {
+      username,
+      height: parseFloat(height),
+      weight: parseFloat(weight)
+    };
+    realm.write(() => {
+      realm.create('User', obj);
+    });
+  }
+
+  validInfo = () => {
+    const {username, height, weight} = this.state;
+    return (username && height && weight);
+  }
+
+  submit = () => {
+    const { navigation } = this.props;
+    if(this.validInfo()) {
+      this.saveInfo();
+      navigation.navigate('Home');
+    } else {
+      ToastAndroid.show('Debe completar todos los campos para continuar', ToastAndroid.SHORT);
+    }
   }
 
   render() {
@@ -95,6 +141,10 @@ export default class RegisterScreen extends PureComponent {
               onChangeText={value => this.setState({weight: value})}
               value={weight}
             />
+          </View>
+
+          <View style={{ flex: 0.1 }}>
+            <Text style={{alignSelf: 'center', textAlign: 'center', fontSize: 14, fontStyle: 'italic'}}>Necesitamos su altura y peso para realizar cálculos</Text>
           </View>
           <TouchableOpacity
             style={{backgroundColor: 'green', margin: 20}}

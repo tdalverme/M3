@@ -93,20 +93,6 @@ class ConnectionScreen extends PureComponent {
       }
     });
 
-    this.events.on("data", result => {
-      if (result) {
-        const { id, data } = result;
-        console.log(`Data from device ${id} : ${data}`);
-        this.setState({data})
-      }
-    });
-
-    this.events.on("error", e => {
-      if (e) {
-        console.log(`Error: ${e.message}`);
-        ToastAndroid.show(e.message, ToastAndroid.SHORT);
-      }
-    });
   }
 
   findDevices = async () => {
@@ -150,7 +136,6 @@ class ConnectionScreen extends PureComponent {
       }
     } catch (e) {
       ToastAndroid.show('Ocurrió un error al intentar conectarse a SmartBarman.', ToastAndroid.SHORT);
-      ToastAndroid.show(e.message, ToastAndroid.SHORT);
       this.setState({ processing: false, connected: false });
     }
   };

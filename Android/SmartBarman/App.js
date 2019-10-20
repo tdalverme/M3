@@ -9,8 +9,8 @@ const UserSchema = {
     username: 'string',
     height: 'float',
     weight: 'float',
-    alcoholLevel: 'float',
-    alcoholicDrinkPercentage: 'float'
+    alcoholLevel: {type: 'float', optional: true},
+    alcoholicDrinkPercentage: {type: 'float', optional: true}
   }
 };
 
@@ -26,7 +26,10 @@ const DrinkSchema = {
 export default class App extends React.Component {
 
   componentWillMount() {
-    Realm.open({schema: [UserSchema, DrinkSchema]});
+    Realm.open({
+      path: 'UserDatabase.realm',
+      schema: [UserSchema, DrinkSchema]
+    });
   }
 
   render() {

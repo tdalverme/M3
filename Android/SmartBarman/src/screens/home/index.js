@@ -15,20 +15,22 @@ import BluetoothSerial, {
 } from "react-native-bluetooth-serial-next";
 
 import HomeScreen from './HomeScreen';
+import FillingGlassHOC from './FillingGlassHOC';
+
+
+const HOCComponent = FillingGlassHOC(HomeScreen);
 
 class Home extends Component {
   state = {
-    glassDetected: false
+    glassDetected: false,
+    filling: false
   };
-
-
 
   async componentDidMount() {
     this.events = this.props.events;
 
     this.events.on("bluetoothDisabled", () => {
       ToastAndroid.show("Bluetooth desactivado.", ToastAndroid.SHORT);
-      console.warn('Se desactivo el bluetooth');
     });
 
     BluetoothSerial.read(
@@ -55,17 +57,19 @@ class Home extends Component {
     const {type, data} = this.parseMessage(message);
     switch (type) {
       case 'detected':
-        console.warn(data);
         this.setState({glassDetected: data === 'true'});
+        break;
+      case 'filling':
+        this.setState({filling: data === 'true'});
         break;
       default:
     }
   }
 
   render() {
-    const { glassDetected } = this.state;
+    const { glassDetected, filling } = this.state;
     return (
-      <HomeScreen glassDetected={glassDetected} />
+      <HOCComponent filling={filling} glassDetected={glassDetected} />
     );
   }
 }
