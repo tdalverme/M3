@@ -1,27 +1,23 @@
-#include <SoftwareSerial.h> //Librería que permite establecer comunicación serie en otros pins
-#include <NewPing.h>
 #include "HX711.h"
 
 /*Aqui se configuran los pines donde debemos conectar el sensor*/
-#define TRIGGER_PIN  4
-#define ECHO_PIN     3  
-#define MAX_DISTANCE 200
 #define DOUT  A1
 #define CLK  A0
-#define MAX_WEIGHT 40
+#define PESO_MAX 200
 
 #define RELAY_PIN_1 8
-//#define RELAY_PIN_2 7
-//#define RELAY_PIN_3 6
-//Aquí conectamos los pins RXD,TDX del módulo Bluetooth.
-SoftwareSerial BT(11,10); //11 RX, 10 TX.
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+#define RELAY_PIN_2 7
+
+#define ESPERANDO_INPUT 20
+#define SIRVIENDO_BEBIDA 21
+#define BEBIDA_FINALIZADA 22
+
+int estadoActual;
 
 HX711 scale;
 
 void setup()
 {
-  BT.begin(9600); //Velocidad del puerto del módulo Bluetooth
   Serial.begin(9600); //Abrimos la comunicación serie con el PC y establecemos velocidad
 
   // setup de la balanza
@@ -29,68 +25,119 @@ void setup()
   scale.set_scale();
   scale.tare();
 
-  long units = scale.get_units(10);
-  long scale_units = units / 150;
-  scale.set_scale(scale_units);
-  
-  
+  scale.set_scale(1);
+  //scale.set_scale(-1060);
+
+
   pinMode(RELAY_PIN_1, OUTPUT);
   digitalWrite(RELAY_PIN_1, HIGH);
-//  pinMode(RELAY_PIN_2, OUTPUT);
-//  digitalWrite(RELAY_PIN_2, HIGH);
-//  pinMode(RELAY_PIN_3, OUTPUT);
-//  digitalWrite(RELAY_PIN_3, HIGH);
-
+  pinMode(RELAY_PIN_2, OUTPUT);
+  digitalWrite(RELAY_PIN_2, HIGH);
+  
+  estadoActual = ESPERANDO_INPUT;
 }
- 
-void loop()
-{
-//  delay(50);
-//  long duration; //timepo que demora en llegar el eco
-//  long distance; //distancia en centimetros
-//  digitalWrite(RELAY_PIN_2, LOW);
-//  digitalWrite(RELAY_PIN_3, LOW);
-//  delay(1000);
-//  digitalWrite(RELAY_PIN_2, HIGH);
-//  digitalWrite(RELAY_PIN_3, HIGH);
-//  delay(3000);
-//  digitalWrite(RELAY_PIN_1, HIGH);
-//  duration = sonar.ping();
-//  distance = (duration / 2) * 0.0343;
-//  char buf[50];
 
- if (scale.is_ready()) {
-    long reading = scale.read_average();
-    Serial.println("HX711 reading: ");
-//    Serial.println(scale.get_units(), 1);
-    long value = scale.get_value(5)/ -1000;
-    Serial.println(value);
-    if(value > MAX_WEIGHT) {
-      digitalWrite(RELAY_PIN_1, HIGH);
-    } else {
-      digitalWrite(RELAY_PIN_1, LOW);
-    }
-  } else {
-    Serial.println("HX711 not found.");
+String input;
+int bebida1;
+int bebida2;
+int porcentajeBebida1;
+int porcentajeBebida2;
+
+int bebidaActual;
+float pesoObjetivo;
+float pesoActual;
+
+void loop() {
+  switch(estadoActual) {
+    case ESPERANDO_INPUT:
+      //Serial.print("PESO ACTUAL: ");
+      //Serial.println(pesoActual);
+      if(getInput() == 1) {
+        parseInput();
+        bebidaActual = bebida1;
+        pesoObjetivo = PESO_MAX * porcentajeBebida1 / 100; 
+        estadoActual = SIRVIENDO_BEBIDA;
+        delay(1000);
+      }
+      break;
+      
+    case SIRVIENDO_BEBIDA:
+      pesoActual = scale.get_units(10);
+      Serial.print("PESO ACTUAL: ");
+      Serial.println(pesoActual);
+      
+      if(pesoActual >= pesoObjetivo) {
+        //Serial.println("MAYOR");
+        if(bebidaActual == bebida2) {
+          estadoActual = BEBIDA_FINALIZADA;
+        }
+        else {
+          digitalWrite(bebidaActual, HIGH);
+          bebidaActual = bebida2;
+          pesoObjetivo = PESO_MAX - pesoActual;
+        }
+      }
+      else {
+        //Serial.println("MENOR");
+        digitalWrite(bebidaActual, LOW);
+      }
+      break;
+      
+    case BEBIDA_FINALIZADA:
+      digitalWrite(bebidaActual, HIGH);
+      Serial.println("TERMINO");
+      estadoActual = ESPERANDO_INPUT;
+      break;
+
+    default:
+      break;
   }
-//
-//  if(BT.available())
-//  {
-//    Serial.write(BT.read());
-//    if(distance > 15) {
-//      sprintf(buf, "detected|false");  
-//    } else {
-//      sprintf(buf, "detected|true");  
-//    }
-//    Serial.println(buf);
-//    Serial.println(distance);
-//    
-//    BT.println(buf);
-//  }
-//
-//  if(Serial.available())
-//  {   
-//     BT.write(Serial.read());
-//  }
-//  
+}
+
+int getInput() {
+  if (Serial.available() > 0) {
+    char caracter = Serial.read();
+    
+    if (caracter != '\n') {
+      input += caracter;
+      return 0;
+    }
+    else {
+      //estadoActual = SIRVIENDO_BEBIDA;
+      return 1;
+    }
+  }
+}
+
+void parseInput() {
+  char aux[input.length() + 1];
+  input.toCharArray(aux, input.length()+ 1);
+  
+  char *token = strtok(aux, "|");
+
+  if(strcmp(token, "FERNET")) {
+    bebida1 = RELAY_PIN_1;
+  }
+  else if(strcmp(token, "COCA")) {
+    bebida1 = RELAY_PIN_2;
+  }
+  
+   
+  for(int i = 0; i < 2; i++) {
+    token = strtok(NULL, "|");
+     
+    if(i == 0) {
+      porcentajeBebida1 = atoi(token);
+    }
+    else if(i == 1) {
+      if(strcmp(token, "FERNET")) {
+        bebida2 = RELAY_PIN_1;
+      }
+      else if(strcmp(token, "COCA")) {
+        bebida2 = RELAY_PIN_2;
+      }
+    }
+  }
+
+  porcentajeBebida2 = 100 - porcentajeBebida1;
 }
