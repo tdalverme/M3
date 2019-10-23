@@ -77,5 +77,5 @@ class Home extends Component {
 
 export default withSubscription({
     subscriptionName: 'events',
-    destroyOnWillUnmount: true,
+    destroyOnWillUnmount: false,
 })(Home);

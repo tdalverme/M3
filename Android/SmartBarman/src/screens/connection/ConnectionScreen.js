@@ -208,5 +208,5 @@ class ConnectionScreen extends PureComponent {
 
 export default withSubscription({
     subscriptionName: 'events',
-    destroyOnWillUnmount: true,
+    destroyOnWillUnmount: false,
 })(ConnectionScreen);
