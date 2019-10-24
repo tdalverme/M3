@@ -30,33 +30,22 @@ const styles = StyleSheet.create({
     flexWrap : "nowrap",
     padding: 8,
     borderBottomWidth :1,
-   borderBottomColor: 'grey'
+    borderBottomColor: 'grey'
   },
-  
+  cargando:{
+    flex: 1,
+    alignItems:'center',
+    justifyContent:'center'
+  },
   title: {
     fontSize: 22,
     color: 'black',
     textAlign: 'center',
   },
-  section: {
-    flex: 0.2,
-    margin: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+  textLeft: {
+    textAlign: 'left',
   },
-  label: {
-    flex: 0.5,
-    color: 'black',
-    fontSize: 18,
-  },
-  picker: {
-    flex: 0.5,
-    height: 40,
-    width: '100%',
-    alignSelf: 'center',
-    fontSize: 18,
-  },
+
 });
 
 let realm;
@@ -64,7 +53,7 @@ let realm;
 export default class Records extends PureComponent {
   state = {
     loading: true,
-    data : [{key:'a1',bebida:'axel'}]
+    data : []
   };
 
   constructor(props) {
@@ -73,9 +62,7 @@ export default class Records extends PureComponent {
 
   }
   async componentDidMount() {
-
-    
-   
+    // #Descomentar para generar lote de prueba 
     // realm.write(() => {        
     //   realm.create('Ingested',{ bebida: 'Fernet de Coca',
     //                            porcentajeAlcoholico : 0.30,
@@ -121,16 +108,15 @@ export default class Records extends PureComponent {
     const { loading, data } = this.state;
 
     return (
+      loading?
+      <View style={styles.cargando}>
+       <ActivityIndicator/>
+      </View>
+      :
       <View  style={styles.container}>
       <FlatList  
       keyExtractor = {(item, index) => index.toString()}
       data = {data} 
-     
-      // data= {[
-      //   {key:'1',name:"asdasd"},
-      //   {key:'2',name:"asdasgd"},
-      //   {key:'3',name:"asdassd"}
-      // ]}
       renderItem = {({ item }) => (
         <View style = {styles.containerHorizontal}>
           <View style = {styles.containerVertical}>
@@ -144,7 +130,9 @@ export default class Records extends PureComponent {
                 <Text>Alcohol </Text>
               </View>
               <View style = {styles.containerHorizontal}>
-                <Text style= {{textAlign:'left'}}>{ parseFloat(item.porcentajeAlcoholico).toFixed(2)}% </Text> 
+                <Text style= {styles.textLeft}>
+                  {parseFloat(item.porcentajeAlcoholico).toFixed(2)}% 
+                </Text> 
               </View>  
             </View>
           
@@ -153,7 +141,9 @@ export default class Records extends PureComponent {
                 <Text>Fecha </Text>
               </View>
               <View style = {styles.containerHorizontal}>
-                <Text style= {{textAlign:'left'}}>{ item.fecha } </Text>
+                <Text style= {styles.textLeft}>
+                  { item.fecha } 
+                </Text>
               </View>
             </View>
 
@@ -162,7 +152,9 @@ export default class Records extends PureComponent {
                 <Text>Puntaje </Text>
               </View>
               <View style = {styles.containerHorizontal}>
-                <Text style= {{textAlign:'left'}}>{ item.puntaje } </Text>
+                <Text style= {styles.textLeft}>
+                  { item.puntaje } 
+                </Text>
               </View>
             </View>
           </View>
