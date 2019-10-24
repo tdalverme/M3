@@ -3,6 +3,7 @@ import Navigation from './src/Navigation';
 
 const Realm = require('realm');
 
+
 const UserSchema = {
   name: 'User',
   properties: {
@@ -23,12 +24,24 @@ const DrinkSchema = {
   }
 };
 
+const DrinksIngestedSchema = {
+  name : 'Ingested',
+  properties:{
+    bebida: 'string',
+    porcentajeAlcoholico : 'float',
+    fecha : 'string',
+    puntaje : 'int'
+  }
+}
+
+
+
 export default class App extends React.Component {
 
   componentWillMount() {
     Realm.open({
       path: 'UserDatabase.realm',
-      schema: [UserSchema, DrinkSchema]
+      schema: [UserSchema, DrinkSchema,DrinksIngestedSchema]
     });
   }
 

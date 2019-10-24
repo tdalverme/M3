@@ -7,15 +7,15 @@ import {
 import HomeScreen from './screens/home';
 import ConnectionScreen from './screens/connection/ConnectionScreen';
 import RegisterScreen from './screens/register';
-import MenuPrincipal from  './screens/menu';
+import Records from  './screens/Records';
 
 const Stack = createStackNavigator({
-  Menu: MenuPrincipal ,
+  Records: Records ,
   Home: HomeScreen,
   Connection: ConnectionScreen,
   Register: RegisterScreen,
 }, {
-  initialRouteName: 'Menu'
+  initialRouteName: 'Records'
 });
 
 const App = createAppContainer(Stack);

@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
 
 let realm;
 
-export default class MenuPrincipal extends PureComponent {
+export default class Records extends PureComponent {
   state = {
     loading: true,
     data : [{key:'a1',bebida:'axel'}]
@@ -69,37 +69,51 @@ export default class MenuPrincipal extends PureComponent {
 
   constructor(props) {
     super(props);
-    class historial {}
-    historial.schema = {
-      name : 'schemaAxel2',
-      properties:{
-        bebida: 'string',
-        porcentajeAlcoholico : 'double',
-        fecha : 'string',
-        puntaje : 'int'
-      }
-    }
-
-    realm = new Realm({schema: [historial]});
+    realm = new Realm({ path: 'UserDatabase.realm' });
 
   }
   async componentDidMount() {
 
-      realm.write(() => {
-        realm.deleteAll()
-      })
-      for (let index = 0; index < 100; index++) {
-        realm.write(() => {        
-          realm.create('schemaAxel2',{ bebida: 'fernet con coca',
-                                   porcentajeAlcoholico : 0.10,
-                                   fecha : '10/10/2019',
-                                   puntaje : 7
-                                 });
-        });
-      }
-
-    let r = realm.objects('schemaAxel2')
     
+   
+    // realm.write(() => {        
+    //   realm.create('Ingested',{ bebida: 'Fernet de Coca',
+    //                            porcentajeAlcoholico : 0.30,
+    //                            fecha : '10/10/2019',
+    //                            puntaje : 1
+    //                          });
+    // });
+    // realm.write(() => {        
+    //   realm.create('Ingested',{ bebida: 'Gancia con Sprite',
+    //                            porcentajeAlcoholico : 0.20,
+    //                            fecha : '10/10/2019',
+    //                            puntaje : -1
+    //                          });
+    // });
+    // realm.write(() => {        
+    //   realm.create('Ingested',{ bebida: 'Agua',
+    //                            porcentajeAlcoholico : 0.00,
+    //                            fecha : '10/10/2019',
+    //                            puntaje : 1
+    //                          });
+    // });
+    // realm.write(() => {        
+    //   realm.create('Ingested',{ bebida: 'fernet con coca',
+    //                            porcentajeAlcoholico : 0.10,
+    //                            fecha : '10/10/2019',
+    //                            puntaje : 7
+    //                          });
+    // });
+    // for (let index = 0; index < 100; index++) {
+    //   realm.write(() => {        
+    //     realm.create('Ingested',{ bebida: 'fernet con coca',
+    //                              porcentajeAlcoholico : 0.10,
+    //                              fecha : '10/10/2019',
+    //                              puntaje : 7
+    //                            });
+    //   });
+    // }
+    let r = realm.objects('Ingested')
     this.setState({data:r,loading:false})
   }
 
@@ -126,12 +140,12 @@ export default class MenuPrincipal extends PureComponent {
           </View>
           <View style = {styles.containerVertical}>
             <View style = {styles.containerHorizontal}>
-              <View style = {styles.containerHorizontal}>
-                <Text>Alcohol% </Text>
+              <View style = {styles.containerHorizontal}> 
+                <Text>Alcohol </Text>
               </View>
               <View style = {styles.containerHorizontal}>
-                <Text style= {{textAlign:'left'}}>{ item.porcentajeAlcoholico } </Text>
-              </View>
+                <Text style= {{textAlign:'left'}}>{ parseFloat(item.porcentajeAlcoholico).toFixed(2)}% </Text> 
+              </View>  
             </View>
           
             <View style = {styles.containerHorizontal}>
@@ -160,7 +174,7 @@ export default class MenuPrincipal extends PureComponent {
     );
   }
 }
-MenuPrincipal.navigationOptions = ({navigation}) => {
+Records.navigationOptions = ({navigation}) => {
   return({
     headerTitle:'Historial de Tragos',
   })
