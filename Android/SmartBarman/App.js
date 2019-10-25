@@ -3,7 +3,7 @@ import Navigation from './src/Navigation';
 
 const Realm = require('realm');
 
-
+Realm.deleteFile({ path: 'UserDatabase.realm'})
 const UserSchema = {
   name: 'User',
   properties: {
@@ -28,9 +28,9 @@ const DrinksIngestedSchema = {
   name : 'Ingested',
   properties:{
     bebida: 'string',
-    porcentajeAlcoholico : 'float',
+    graduacionAlc : 'float',
     fecha : 'string',
-    puntaje : 'int'
+    cantidad : 'float'
   }
 }
 

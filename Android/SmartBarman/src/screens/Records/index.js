@@ -3,48 +3,22 @@ import {
   StyleSheet,
   Text,
   ActivityIndicator,
-  FlatList,
-  View
+  View,
+  Image,
+  Button
 } from 'react-native';
 
 const Realm = require('realm');
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
+    flex: 0.9,
+    justifyContent: 'space-between',
+
     backgroundColor: 'white',
     padding: 10,
   },
-  containerHorizontal:{
-
-    flex: 1,
-    flexDirection : 'row',
-    justifyContent: 'space-between',
-    flexWrap : "nowrap",
-  },
-  containerVertical:{
-    flex: 1,
-    flexDirection : 'column',
-    justifyContent: 'space-between',
-    flexWrap : "nowrap",
-    padding: 8,
-    borderBottomWidth :1,
-    borderBottomColor: 'grey'
-  },
-  cargando:{
-    flex: 1,
-    alignItems:'center',
-    justifyContent:'center'
-  },
-  title: {
-    fontSize: 22,
-    color: 'black',
-    textAlign: 'center',
-  },
-  textLeft: {
-    textAlign: 'left',
-  },
+  
 
 });
 
@@ -53,59 +27,62 @@ let realm;
 export default class Records extends PureComponent {
   state = {
     loading: true,
-    data : []
+    graduacionAlc : null,
   };
 
-  constructor(props) {
-    super(props);
-    realm = new Realm({ path: 'UserDatabase.realm' });
-
-  }
   async componentDidMount() {
-    // #Descomentar para generar lote de prueba 
-    // realm.write(() => {        
-    //   realm.create('Ingested',{ bebida: 'Fernet de Coca',
-    //                            porcentajeAlcoholico : 0.30,
-    //                            fecha : '10/10/2019',
-    //                            puntaje : 1
-    //                          });
-    // });
-    // realm.write(() => {        
-    //   realm.create('Ingested',{ bebida: 'Gancia con Sprite',
-    //                            porcentajeAlcoholico : 0.20,
-    //                            fecha : '10/10/2019',
-    //                            puntaje : -1
-    //                          });
-    // });
-    // realm.write(() => {        
-    //   realm.create('Ingested',{ bebida: 'Agua',
-    //                            porcentajeAlcoholico : 0.00,
-    //                            fecha : '10/10/2019',
-    //                            puntaje : 1
-    //                          });
-    // });
-    // realm.write(() => {        
-    //   realm.create('Ingested',{ bebida: 'fernet con coca',
-    //                            porcentajeAlcoholico : 0.10,
-    //                            fecha : '10/10/2019',
-    //                            puntaje : 7
-    //                          });
-    // });
+    realm = new Realm({ path: 'UserDatabase.realm' });
+    //Auto Genera lote de prueba
+    realm.write(() => {        
+      realm.create('Ingested',{ bebida: 'Fernet de Coca',
+                               graduacionAlc : 0.30,
+                               fecha : '10/10/2019',
+                               cantidad : 250.00
+                             });
+    });
+    realm.write(() => {        
+      realm.create('Ingested',{ bebida: 'Gancia con Sprite',
+                               graduacionAlc : 0.20,
+                               fecha : '10/10/2019',
+                               cantidad : 250
+                             });
+    });
+    realm.write(() => {        
+      realm.create('Ingested',{ bebida: 'Agua',
+                               graduacionAlc : 0.00,
+                               fecha : '10/10/2019',
+                               cantidad : 50
+                             });
+    });
+    realm.write(() => {        
+      realm.create('Ingested',{ bebida: 'fernet con coca',
+                               graduacionAlc : 0.10,
+                               fecha : '10/10/2019',
+                               cantidad : 7
+                             });
+    });
     // for (let index = 0; index < 100; index++) {
     //   realm.write(() => {        
     //     realm.create('Ingested',{ bebida: 'fernet con coca',
-    //                              porcentajeAlcoholico : 0.10,
+    //                              graduacionAlc : 0.10,
     //                              fecha : '10/10/2019',
-    //                              puntaje : 7
+    //                              cantidad : 7
     //                            });
     //   });
     // }
-    let r = realm.objects('Ingested')
-    this.setState({data:r,loading:false})
+    //fin lote de prueba
+
+    let tragos = realm.objects('Ingested').filter(aux=>1==1)
+    let aux = 0 ;
+    tragos.forEach(t0 => {
+      aux += t0.graduacionAlc * t0.cantidad      
+    });
+    
+    this.setState({graduacionAlc:aux,loading:false})
   }
 
   render() {
-    const { loading, data } = this.state;
+    const { loading, graduacionAlc } = this.state;
 
     return (
       loading?
@@ -113,61 +90,22 @@ export default class Records extends PureComponent {
        <ActivityIndicator/>
       </View>
       :
-      <View  style={styles.container}>
-      <FlatList  
-      keyExtractor = {(item, index) => index.toString()}
-      data = {data} 
-      renderItem = {({ item }) => (
-        <View style = {styles.containerHorizontal}>
-          <View style = {styles.containerVertical}>
-            <Text >
-               { item.bebida }
-            </Text>
-          </View>
-          <View style = {styles.containerVertical}>
-            <View style = {styles.containerHorizontal}>
-              <View style = {styles.containerHorizontal}> 
-                <Text>Alcohol </Text>
-              </View>
-              <View style = {styles.containerHorizontal}>
-                <Text style= {styles.textLeft}>
-                  {parseFloat(item.porcentajeAlcoholico).toFixed(2)}% 
-                </Text> 
-              </View>  
-            </View>
-          
-            <View style = {styles.containerHorizontal}>
-              <View style = {styles.containerHorizontal}>
-                <Text>Fecha </Text>
-              </View>
-              <View style = {styles.containerHorizontal}>
-                <Text style= {styles.textLeft}>
-                  { item.fecha } 
-                </Text>
-              </View>
-            </View>
-
-            <View style = {styles.containerHorizontal}>
-              <View style = {styles.containerHorizontal} >
-                <Text>Puntaje </Text>
-              </View>
-              <View style = {styles.containerHorizontal}>
-                <Text style= {styles.textLeft}>
-                  { item.puntaje } 
-                </Text>
-              </View>
-            </View>
-          </View>
+      <View style={styles.container}>
+        <View style={{paddingTop:10}}>  
+          <Text>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
+          <Text>Tu nivel es <Text style={{fontWeight:'bold'}}>{'moderado'}</Text></Text>
         </View>
-      )}
-      />
-    </View>
+        <Image style={{width:'100%'}}
+        source ={require('./moderado.png')} />
+        <Button title="Ver Detalle"  
+        onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+      </View>
 
     );
   }
 }
 Records.navigationOptions = ({navigation}) => {
   return({
-    headerTitle:'Historial de Tragos',
+    headerTitle:'Estado Alcoholico',
   })
 }
