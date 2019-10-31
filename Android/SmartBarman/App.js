@@ -29,7 +29,7 @@ const DrinksIngestedSchema = {
   properties:{
     bebida: 'string',
     graduacionAlc : 'float',
-    fecha : 'string',
+    fecha : 'date',
     cantidad : 'float'
   }
 }

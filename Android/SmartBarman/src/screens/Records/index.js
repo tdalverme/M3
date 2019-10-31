@@ -1,4 +1,5 @@
 import React, {PureComponent} from 'react';
+import compararFechas from './compararFechas'
 import {
   StyleSheet,
   Text,
@@ -9,6 +10,30 @@ import {
 } from 'react-native';
 
 const Realm = require('realm');
+
+const estadoSobrio = 0
+const estadoModerado = 1
+const estadoEbrio = 2
+const propEstado = new Array()
+
+propEstado[estadoSobrio] = {
+  estado: 'sobrio',
+  imagen: require('../../../assets/sobrio.jpg'),
+  mensaje: 'Estás habilitado para conducir',
+}
+propEstado[estadoModerado] = {
+  estado: 'moderado',
+  imagen: require('../../../assets/moderado.png'),
+  mensaje: 'Estás habilitado para conducir',
+}
+propEstado[estadoEbrio] = {
+  estado: 'ebrio',
+  imagen: require('../../../assets/ebrio.jpg'),
+  mensaje: <Text style={{fontWeight:'bold',fontSize:20}}>NO podés conducir</Text>
+}
+const limitSobrio = 0.0
+const limitAuto = 0.5
+
 
 const styles = StyleSheet.create({
   container: {
@@ -28,38 +53,23 @@ export default class Records extends PureComponent {
   state = {
     loading: true,
     graduacionAlc : null,
+    estadoAlc : null
   };
+  
 
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
     //Auto Genera lote de prueba
-    realm.write(() => {        
-      realm.create('Ingested',{ bebida: 'Fernet de Coca',
-                               graduacionAlc : 0.30,
-                               fecha : '10/10/2019',
-                               cantidad : 250.00
-                             });
+    realm.write(() => {  
+      
+    
+    realm.create('User',{ 
+      username: 'Axel',
+      height: 170,
+      weight: 70
     });
-    realm.write(() => {        
-      realm.create('Ingested',{ bebida: 'Gancia con Sprite',
-                               graduacionAlc : 0.20,
-                               fecha : '10/10/2019',
-                               cantidad : 250
-                             });
-    });
-    realm.write(() => {        
-      realm.create('Ingested',{ bebida: 'Agua',
-                               graduacionAlc : 0.00,
-                               fecha : '10/10/2019',
-                               cantidad : 50
-                             });
-    });
-    realm.write(() => {        
-      realm.create('Ingested',{ bebida: 'fernet con coca',
-                               graduacionAlc : 0.10,
-                               fecha : '10/10/2019',
-                               cantidad : 7
-                             });
+
+      
     });
     // for (let index = 0; index < 100; index++) {
     //   realm.write(() => {        
@@ -72,20 +82,39 @@ export default class Records extends PureComponent {
     // }
     //fin lote de prueba
 
-    let tragos = realm.objects('Ingested').filter(aux=>1==1)
+    let userConnect = realm.objects('User')[0];let a;let b;
+    let tragos = realm.objects('Ingested').filter(aux=>
+      compararFechas(aux)
+    )
     let aux = 0 ;
     tragos.forEach(t0 => {
       aux += t0.graduacionAlc * t0.cantidad      
     });
+    aux /= userConnect.weight
+    if(aux == limitSobrio){
+      this.setState({graduacionAlc:aux,estadoAlc:estadoSobrio,loading:false})
+    }else if(aux < limitAuto){
+      this.setState({graduacionAlc:aux,estadoAlc:estadoModerado,loading:false})
+    }else{
+      this.setState({graduacionAlc:aux,estadoAlc:estadoEbrio,loading:false})
+    }
     
-    this.setState({graduacionAlc:aux,loading:false})
+
+
+
   }
 
   render() {
-    const { loading, graduacionAlc } = this.state;
-
+    const { loading, graduacionAlc, estadoAlc } = this.state;
+    
+    if(estadoAlc !== null){
+      imagen = propEstado[estadoAlc].imagen;
+    }else{
+      imagen = null;
+    }
+    
     return (
-      loading?
+      loading || imagen == null? 
       <View style={styles.cargando}>
        <ActivityIndicator/>
       </View>
@@ -93,12 +122,17 @@ export default class Records extends PureComponent {
       <View style={styles.container}>
         <View style={{paddingTop:10}}>  
           <Text>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
-          <Text>Tu nivel es <Text style={{fontWeight:'bold'}}>{'moderado'}</Text></Text>
+          <Text>Tu nivel es <Text style={{fontWeight:'bold'}}>{propEstado[estadoAlc].estado}</Text></Text>
+          <Text>{propEstado[estadoAlc].mensaje}</Text>
         </View>
-        <Image style={{width:'100%'}}
-        source ={require('./moderado.png')} />
-        <Button title="Ver Detalle"  
-        onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+        <View style={{flex:0.8}}>
+          <Image style= {{height: '100%',width:'100%'}}
+            source ={imagen} /> 
+        </View>
+        <View>
+          <Button title="Ver Detalle"  
+          onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+        </View>
       </View>
 
     );
@@ -106,6 +140,6 @@ export default class Records extends PureComponent {
 }
 Records.navigationOptions = ({navigation}) => {
   return({
-    headerTitle:'Estado Alcoholico',
+    headerTitle:'Estado Alcohólico',
   })
 }
