@@ -66,10 +66,16 @@ class Home extends Component {
     }
   }
 
+  startFilling = async () => {
+    console.warn('startFilling');
+    await BluetoothSerial.clear();
+    await BluetoothSerial.write("FERNET|30|COCA@");
+  }
+
   render() {
     const { glassDetected, filling } = this.state;
     return (
-      <HOCComponent filling={filling} glassDetected={glassDetected} />
+      <HOCComponent filling={filling} glassDetected={glassDetected} startFilling={this.startFilling} />
     );
   }
 }

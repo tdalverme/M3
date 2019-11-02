@@ -1,5 +1,10 @@
 #define FERNET 8
 #define COCA 7
+#define RX 10
+#define TX 11
+
+#include <SoftwareSerial.h>
+SoftwareSerial BT(RX, TX);
 
 struct Trago {
   int bebida1;
@@ -9,19 +14,26 @@ struct Trago {
 };
 
 String input;
+char buf[50];
+char caracter;
 
 int getInput() {
-  if (Serial.available() > 0) {
-    char caracter = Serial.read();
-
-    if (caracter != '\n') {
+  
+  if(BT.available())
+   { 
+      caracter = BT.read();
+     if (caracter != '@') {
       input += caracter;
       return 0;
-    }
-    else {
+     }
+     else {
+      Serial.println(input);
       return 1;
-    }
-  }
+     }
+    
+   } else{
+    return 0;
+   }
 }
 
 Trago parseInput() {
@@ -59,10 +71,10 @@ Trago parseInput() {
   }
   Serial.print("trago 1:");
   Serial.println(trago.bebida1);
-   
+
   Serial.print("trago 2:");
   Serial.println(trago.bebida2);
-  
+
   trago.porcentajeBebida2 = 100 - trago.porcentajeBebida1;
 
   return trago;

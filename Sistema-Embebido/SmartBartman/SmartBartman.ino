@@ -33,7 +33,7 @@ HC_SR04 ultrasonido(ULTRASONIDO_TRIG, ULTRASONIDO_ECHO, ULTRASONIDO_INT);
 void setup()
 {
   Serial.begin(9600); //Abrimos la comunicación serie con el PC y establecemos velocidad
-
+  BT.begin(9600); //Velocidad del puerto del módulo Bluetooth
   initBalanza(&scale, BALANZA_DOUT, BALANZA_CLK, FACTOR_CALIBRACION);
 
   /**
@@ -92,7 +92,7 @@ void loop() {
 }
 
 void handleEsperandoInput() {
-  if(getInput() == 1) {
+  if(getInput() == 1) { 
     tragoSeleccionado = parseInput();
     bebidaActual = tragoSeleccionado.bebida1;
     bebida2 = tragoSeleccionado.bebida2;
