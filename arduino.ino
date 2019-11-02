@@ -4,7 +4,7 @@
 
 /*Aqui se configuran los pines donde debemos conectar el sensor*/
 #define TRIGGER_PIN  4
-#define ECHO_PIN     3  
+#define ECHO_PIN     3
 #define MAX_DISTANCE 200
 #define DOUT  A1
 #define CLK  A0
@@ -32,8 +32,8 @@ void setup()
   long units = scale.get_units(10);
   long scale_units = units / 150;
   scale.set_scale(scale_units);
-  
-  
+
+
   pinMode(RELAY_PIN_1, OUTPUT);
   digitalWrite(RELAY_PIN_1, HIGH);
 //  pinMode(RELAY_PIN_2, OUTPUT);
@@ -42,7 +42,7 @@ void setup()
 //  digitalWrite(RELAY_PIN_3, HIGH);
 
 }
- 
+
 void loop()
 {
 //  delay(50);
@@ -74,23 +74,23 @@ void loop()
     Serial.println("HX711 not found.");
   }
 //
-//  if(BT.available())
-//  {
-//    Serial.write(BT.read());
-//    if(distance > 15) {
-//      sprintf(buf, "detected|false");  
-//    } else {
-//      sprintf(buf, "detected|true");  
-//    }
-//    Serial.println(buf);
-//    Serial.println(distance);
-//    
-//    BT.println(buf);
-//  }
-//
-//  if(Serial.available())
-//  {   
-//     BT.write(Serial.read());
-//  }
-//  
+ if(BT.available())
+ {
+   Serial.write(BT.read());
+   if(distance > 15) {
+     sprintf(buf, "detected|false");
+   } else {
+     sprintf(buf, "detected|true");
+   }
+   Serial.println(buf);
+   Serial.println(distance);
+
+   BT.println(buf);
+ }
+
+ if(Serial.available())
+ {
+    BT.write(Serial.read());
+ }
+
 }

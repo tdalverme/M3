@@ -1,4 +1,4 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import {
   Platform,
   StyleSheet,
@@ -7,12 +7,12 @@ import {
   PermissionsAndroid,
   ToastAndroid,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
 
 import BluetoothSerial, {
-  withSubscription
-} from "react-native-bluetooth-serial-next";
+  withSubscription,
+} from 'react-native-bluetooth-serial-next';
 
 const styles = StyleSheet.create({
   container: {
@@ -33,26 +33,38 @@ const styles = StyleSheet.create({
 });
 
 const GlassDetectedMessage = ({ detected }) => {
-  if(detected) {
+  if (detected) {
     return (
-      <View style={{width: '100%', backgroundColor: 'green', flex: 0.1, selfAlign: 'flex-start', alignItems: 'center', justifyContent: 'center'}}>
-        <Text style={{color: 'white', padding: 10 }}> El vaso está en posición </Text>
+      <View style={{
+        width: '100%', backgroundColor: 'green', flex: 0.1, selfAlign: 'flex-start', alignItems: 'center', justifyContent: 'center',
+      }}
+      >
+        <Text style={{ color: 'white', padding: 10 }}> El vaso está en posición </Text>
       </View>
-    )
+    );
   }
   return (
-    <View style={{width: '100%', backgroundColor: 'red', flex: 0.1, selfAlign: 'flex-start', alignItems: 'center', justifyContent: 'center'}}>
-      <Text style={{color: 'white', padding: 10 }}> Posicione el vaso para comenzar </Text>
-    </View>
-  )
-}
-
-const HomeScreen = ({ glassDetected }) => {
-  return (
-    <View style={styles.container}>
-      <GlassDetectedMessage detected={glassDetected} />
+    <View style={{
+      width: '100%', backgroundColor: 'red', flex: 0.1, selfAlign: 'flex-start', alignItems: 'center', justifyContent: 'center',
+    }}
+    >
+      <Text style={{ color: 'white', padding: 10 }}> Posicione el vaso para comenzar </Text>
     </View>
   );
-}
+};
+
+const HomeScreen = ({ glassDetected, startFilling }) => (
+  <View style={styles.container}>
+    <GlassDetectedMessage detected={glassDetected} />
+    <TouchableOpacity
+      style={{
+        alignItems: 'center', justifyContent: 'center', backgroundColor: 'green', margin: 20,
+      }}
+      onPress={startFilling}
+    >
+      <Text style={{ color: 'white', padding: 20 }}>Empezar a llenar</Text>
+    </TouchableOpacity>
+  </View>
+);
 
 export default HomeScreen;
