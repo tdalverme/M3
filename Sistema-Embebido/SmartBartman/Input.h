@@ -1,26 +1,26 @@
-#define FERNET 8
-#define COCA 7
-#define RX 10
-#define TX 11
+#define PIN_RELAY_FERNET 8
+#define PIN_RELAY_COCA 7
+#define PIN_BT_RX 10
+#define PIN_BT_TX 11
 
 #include <SoftwareSerial.h>
-SoftwareSerial BT(RX, TX);
+SoftwareSerial BT(PIN_BT_RX, PIN_BT_TX);
 
-struct Trago {
+typedef struct  {
   int bebida1;
   int bebida2;
   int porcentajeBebida1;
   int porcentajeBebida2;
-};
+} Trago;
 
 String input;
 char buf[50];
 char caracter;
 
 int getInput() {
-  
+
   if(BT.available())
-   { 
+   {
       caracter = BT.read();
      if (caracter != '@') {
       input += caracter;
@@ -30,7 +30,7 @@ int getInput() {
       Serial.println(input);
       return 1;
      }
-    
+
    } else{
     return 0;
    }
@@ -49,11 +49,11 @@ Trago parseInput() {
   char *token = strtok(aux, "|");
 
   if(strcmp(token, "FERNET") == 0) {
-    trago.bebida1 = FERNET;
-    // trago.bebida2 = COCA;
+    trago.bebida1 = PIN_RELAY_FERNET;
+    // trago.bebida2 = PIN_RELAY_COCA;
   }
   else if(strcmp(token, "COCA") == 0) {
-    trago.bebida1 = COCA;
+    trago.bebida1 = PIN_RELAY_COCA;
   }
 
   for(int i = 0; i < 2; i++) {
@@ -65,11 +65,11 @@ Trago parseInput() {
     }
     else if(i == 1) {
       if(strcmp(token, "FERNET") == 0) {
-        trago.bebida2 = FERNET;
+        trago.bebida2 = PIN_RELAY_FERNET;
       }
       else if(strcmp(token, "COCA") == 0) {
         Serial.println("entro acaaa");
-        trago.bebida2 = COCA;
+        trago.bebida2 = PIN_RELAY_COCA;
       }
     }
   }
