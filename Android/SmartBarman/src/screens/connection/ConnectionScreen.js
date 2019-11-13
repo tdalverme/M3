@@ -106,8 +106,7 @@ class ConnectionScreen extends PureComponent {
 
       this.setState({isEnabled, processing: isEnabled});
       if(isEnabled) {
-        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05 ')[0];
-          console.warn(arduinoBluetooth)  
+        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
         if(arduinoBluetooth) {
           this.setState({device: arduinoBluetooth});
           this.connect(arduinoBluetooth.id);
@@ -182,7 +181,7 @@ class ConnectionScreen extends PureComponent {
           isEnabled && connected && !processing &&
           <TouchableOpacity
             style={{backgroundColor: 'green', margin: 20}}
-            onPress={() => navigation.navigate('Register')}>
+            onPress={() => navigation.navigate('Home')}>
             <Text style={{color: 'white', padding: 10}}> COMENZAR </Text>
           </TouchableOpacity>
         }

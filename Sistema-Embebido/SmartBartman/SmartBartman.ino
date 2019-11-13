@@ -1,10 +1,10 @@
 #include "HX711.h"
-#include "HC_SR04.h"
+#include "AsyncSonarLib.h"
 #include "Input.h"
 
 /*Aqui se configuran los pines donde debemos conectar el sensor*/
-#define BALANZA_DOUT  A4
-#define BALANZA_CLK  A3
+#define BALANZA_DOUT  A1
+#define BALANZA_CLK  A0
 #define FACTOR_CALIBRACION -1060
 
 #define ULTRASONIDO_INT 0
@@ -14,7 +14,7 @@
 #define SENSOR_TEMP A2
 #define CANT_MEDICIONES_TEMP 10
 
-#define DISTANCIA_VASO_MAX 20
+#define DISTANCIA_VASO_MAX 200
 #define PESO_MAX 200
 
 #define ESPERANDO_INPUT 20
@@ -28,7 +28,7 @@ float sumadorTemp;
 float temperatura;
 
 HX711 scale;
-HC_SR04 ultrasonido(ULTRASONIDO_TRIG, ULTRASONIDO_ECHO, ULTRASONIDO_INT);
+AsyncSonar sonar(ULTRASONIDO_TRIG);
 
 void setup()
 {
@@ -74,7 +74,13 @@ void loop() {
       break;
 
     case ESPERANDO_VASO:
-      handleEsperandoVaso();
+      sonar.Start();
+      delay(50);
+      sonar.Update();
+      if(sonar.GetMeasureMM() < DISTANCIA_VASO_MAX) {
+        estadoActual = SIRVIENDO_BEBIDA;
+        Serial.println("En rango");
+      }
       break;
       
     case SIRVIENDO_BEBIDA:
@@ -83,6 +89,7 @@ void loop() {
       
     case BEBIDA_FINALIZADA:
       //handleBebidaFinalizada();
+      estadoActual = ESPERANDO_INPUT;
       Serial.println("FINALIZADA.");
       break;
 
@@ -99,11 +106,10 @@ void handleEsperandoInput() {
     porcentajeBebida1 = tragoSeleccionado.porcentajeBebida1;
     porcentajeBebida2 = tragoSeleccionado.porcentajeBebida2;
     pesoObjetivo = PESO_MAX * tragoSeleccionado.porcentajeBebida1 / 100; 
-    //estadoActual = ESPERANDO_VASO;
-    estadoActual = SIRVIENDO_BEBIDA;
+    estadoActual = ESPERANDO_VASO;
+    //estadoActual = SIRVIENDO_BEBIDA;
     digitalWrite(bebidaActual, LOW);
     ultrasonido.start();
-    Serial.println("TRIG");
   }
 }
 
@@ -111,7 +117,8 @@ void handleEsperandoVaso() {
   if(ultrasonido.isFinished()) {
     Serial.println("FINISHED");
     if(ultrasonido.getRange() < DISTANCIA_VASO_MAX) {
-      estadoActual = SIRVIENDO_BEBIDA;  
+      estadoActual = SIRVIENDO_BEBIDA;
+      Serial.println("En rango");
     }
 
     ultrasonido.start();
@@ -120,6 +127,7 @@ void handleEsperandoVaso() {
 
 void handleSirviendoBebida() {
   digitalWrite(bebidaActual, HIGH);
+  delay(500);
   pesoActual = scale.get_units(3);
   
   Serial.print("PESO ACTUAL: ");
@@ -134,12 +142,15 @@ void handleSirviendoBebida() {
       digitalWrite(bebidaActual, HIGH);
     }
     else {
+      sendMessage("change|COCA");
       digitalWrite(bebidaActual, HIGH);
+      sendMessage("change|COCA");
       bebidaActual = bebida2;
       pesoObjetivo = PESO_MAX - pesoActual;
     }
   }
   else {
+    
     digitalWrite(bebidaActual, LOW);
     delay(500);
   }

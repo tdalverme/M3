@@ -23,7 +23,8 @@ const HOCComponent = FillingGlassHOC(HomeScreen);
 class Home extends Component {
   state = {
     glassDetected: false,
-    filling: false
+    filling: false,
+    drink: ''
   };
 
   async componentDidMount() {
@@ -35,6 +36,7 @@ class Home extends Component {
 
     BluetoothSerial.read(
       (data, intervalId) => {
+        console.warn('entro al read');
         const message = data.replace(/(\r\n|\n|\r)/gm, "");
         this.processData(message);
         if (intervalId) {
@@ -56,6 +58,10 @@ class Home extends Component {
   processData = (message) => {
     const {type, data} = this.parseMessage(message);
     switch (type) {
+      case 'finished':
+        this.state({filling: false})
+      case 'change':
+        this.setState({drink: data});
       case 'detected':
         this.setState({glassDetected: data === 'true'});
         break;
@@ -67,15 +73,21 @@ class Home extends Component {
   }
 
   startFilling = async () => {
-    console.warn('startFilling');
     await BluetoothSerial.clear();
-    await BluetoothSerial.write("FERNET|30|COCA@");
+    //aca habria que consultar el nivel de alcohol que hay guardado en realm
+    this.setState({filling: true, drink: 'FERNET'}, async () => {
+      await BluetoothSerial.write("FERNET|30|COCA@");
+    });
   }
 
   render() {
-    const { glassDetected, filling } = this.state;
+    const { glassDetected, filling, drink } = this.state;
     return (
-      <HOCComponent filling={filling} glassDetected={glassDetected} startFilling={this.startFilling} />
+      <HOCComponent
+        drink={drink}
+        filling={filling}
+        glassDetected={glassDetected}
+        startFilling={this.startFilling} />
     );
   }
 }

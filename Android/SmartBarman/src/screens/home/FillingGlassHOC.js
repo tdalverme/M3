@@ -6,7 +6,7 @@ import {
 const coca_image = require('../../../assets/coca-cola.png');
 const fernet_image = require('../../../assets/fernet.jpg');
 
-const Filling = ({}) => (
+const Filling = ({ drink }) => (
   <View style={{
     flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
   }}
@@ -23,7 +23,7 @@ const Filling = ({}) => (
     <View style={{ flex: 0.5 }}>
       <Image
         style={{ margin: 10, height: 200, width: 200 }}
-        source={fernet_image}
+        source={drink === 'FERNET' ? fernet_image : coca_image}
       />
     </View>
 
@@ -33,7 +33,9 @@ const Filling = ({}) => (
   </View>
 );
 
-export default (Comp) => ({ filling, children, ...props }) => (
+export default (Comp) => ({
+  drink, filling, children, ...props
+}) => (
   <View style={{ flex: 1 }}>
     <Comp {...props}>
       {children}
@@ -46,7 +48,7 @@ export default (Comp) => ({ filling, children, ...props }) => (
             { backgroundColor: 'rgba(0, 0, 0, 0.8)', justifyContent: 'center' },
           ]}
         >
-          <Filling />
+          <Filling drink={drink} />
         </View>
         )}
   </View>

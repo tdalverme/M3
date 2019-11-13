@@ -36,6 +36,10 @@ int getInput() {
    }
 }
 
+void sendMessage(String message) {
+  BT.println(message);
+}
+
 Trago parseInput() {
   Trago trago;
 

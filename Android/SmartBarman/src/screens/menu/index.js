@@ -1,9 +1,9 @@
-import React, {PureComponent} from 'react';
+import React, { PureComponent } from 'react';
 import {
   StyleSheet,
   Button,
   Image,
-  View
+  View,
 } from 'react-native';
 
 
@@ -16,26 +16,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     padding: 10,
   },
-  containerHorizontal:{
+  containerHorizontal: {
 
     flex: 1,
-    flexDirection : 'row',
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    flexWrap : "nowrap",
+    flexWrap: 'nowrap',
   },
-  containerVertical:{
+  containerVertical: {
     flex: 1,
-    flexDirection : 'column',
+    flexDirection: 'column',
     justifyContent: 'space-between',
-    flexWrap : "nowrap",
+    flexWrap: 'nowrap',
     padding: 8,
-    borderBottomWidth :1,
-    borderBottomColor: 'grey'
+    borderBottomWidth: 1,
+    borderBottomColor: 'grey',
   },
-  cargando:{
+  cargando: {
     flex: 1,
-    alignItems:'center',
-    justifyContent:'center'
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 22,
@@ -49,29 +49,30 @@ const styles = StyleSheet.create({
 });
 
 
-const Menu = ({navigation})=> {
-    return (
-    <View style={{flex:1}}>
-        
-        <Image source ={require('./menu_principal.jpg')} />
-        <View style={styles.container}>
-            
-            <Button title = "Preparar un trago"
-            onPress={()=>{navigation.navigate('Home')}}/>
-            <Button title = "Ver mi estado alcoholico"
-            onPress={()=>{navigation.navigate('Records')}}/>
-            <Button title = "Editar mis datos"
-            onPress={()=>{navigation.navigate('')}}/>
-        </View>
+const Menu = ({ navigation }) => (
+  <View style={{ flex: 1 }}>
 
+    <Image source={require('./menu_principal.jpg')} />
+    <View style={styles.container}>
+
+      <Button
+        title="Preparar un trago"
+        onPress={() => { navigation.navigate('Connection'); }}
+      />
+      <Button
+        title="Ver mi estado alcoholico"
+        onPress={() => { navigation.navigate('Records'); }}
+      />
+      <Button
+        title="Editar mis datos"
+        onPress={() => { navigation.navigate(''); }}
+      />
     </View>
 
-    );
-  
-}
-Menu.navigationOptions = ({navigation}) => {
-  return({
-    headerTitle:'SmartDrink',
-  })
-}
+  </View>
+
+);
+Menu.navigationOptions = ({ navigation }) => ({
+  headerTitle: 'SmartDrink',
+});
 export default Menu;
