@@ -5,18 +5,7 @@
 //TODO agregar logica al llenado para que llene distintas cantidades, al principio mas y cada vez menos
 //TODO medir cuanto llena en 1 segundo o 1 segundo y medio y sacar conclusiones
 
-              /*VARIABLES GLOBALES*/
-/**************************************************/
-SoftwareSerial BT(PIN_BT_RX, PIN_BT_TX);
 
-HX711 scale;
-AsyncSonar sonar(PIN_ULTRASONIDO_TRIG, sonarPingRecieved, sonarTimeOut);
-
-int estadoActual;               //Variable que contiene el STATE actual
-
-Trago tragoSeleccionado;
-ConfigTrago config;
-/**************************************************/
                 /*HANDLE STATES*/
 /**************************************************/
 //Obtiene mensaje del bluetooth y setea el trago elegido
@@ -24,7 +13,7 @@ void handleEsperandoInput() {
   String input = getMessage();
 
   if(!input.equals("")) {
-    tragoSeleccionado = parseInput();
+    tragoSeleccionado = parseInput(&input[0]);
     config = getConfig(tragoSeleccionado);
     estadoActual = STATE_ESPERANDO_VASO;
   }
@@ -43,31 +32,31 @@ void handleSirviendoBebida() {
 
   Serial.println("Sirviendo bebida");
 
-  encenderRelay(config.bebidaActual);
+  encenderRelay(config.pinBebidaActual);
   float pesoActual = scale.get_units(3);
 
-  while(pesoactual <= pesoObjetivo1) {
-    String log = "Peso actual: " + pesoActual + " Bomba: " + config.bebidaActual;
+  while(pesoActual <= config.pesoObjetivo1) {
+    String log = "Peso actual: " + String(pesoActual) + " Bomba: " + String(config.pinBebidaActual);
     Serial.println(log);
     pesoActual = scale.get_units(3);
   }
 
-  apagarRelay(config.bebidaActual);
-  String msg = "change|" + tragoSeleccionado.bebida1;
+  apagarRelay(config.pinBebidaActual);
+  String msg = "change|" + String(tragoSeleccionado.bebida1);
   sendMessage(msg);
 
-  config.bebidaActual = config.bebida2;
-  encenderRelay(config.bebidaActual);
+  config.pinBebidaActual = config.pinBebida2;
+  encenderRelay(config.pinBebidaActual);
   pesoActual = scale.get_units(3);
 
   while(pesoActual <= PESO_MAX) {
-    String log = "Peso actual: " + pesoActual + " Bomba: " + config.bebidaActual;
+    String log = "Peso actual: " + String(pesoActual) + " Bomba: " + String(config.pinBebidaActual);
     Serial.println(log);
     pesoActual = scale.get_units(3);
   }
 
-  apagarRelay(bebidaActual);
-  String msg = "change|" + tragoSeleccionado.bebida2;
+  apagarRelay(config.pinBebidaActual);
+  msg = "change|" + String(tragoSeleccionado.bebida2);
   sendMessage(msg);
 
   Serial.println("Bebida servida");
@@ -82,7 +71,7 @@ void handleVasoAusente() {
 
 //Finaliza la bebida y mide la temperatura
 void handleBebidaFinalizada() {
-  float temperatura = getTemperatura;
+  float temperatura = getTemperatura();
   Serial.println("Bebida finalizada.");
   estadoActual = STATE_ESPERANDO_INPUT;
 }
@@ -114,8 +103,8 @@ ConfigTrago getConfig(Trago trago) {
   config.bebida1Porcentaje = trago.bebida1Porcentaje;
   config.pinBebida2 = getPin(trago.bebida2);
   config.bebida2Porcentaje = trago.bebida2Porcentaje;
-  config.pesoObjetivo1 = PESO_MAX * tragoSeleccionado.porcentajeBebida1 / 100;
-  config.bebidaActual = config.pinBebida1;
+  config.pesoObjetivo1 = PESO_MAX * trago.bebida1Porcentaje / 100;
+  config.pinBebidaActual = config.pinBebida1;
   return config;
 }
 
@@ -135,8 +124,8 @@ float getTemperatura() {
     sumadorTemp += getTemperaturaDelSensor();
     cantMediciones++;
   }
-  float temperatura = sumadorTemp / CANT_MEDICIONES_TEMP;
-  String log = "Temperatura del trago: " + temperatura";
+  float temperatura = (float)sumadorTemp / CANT_MEDICIONES_TEMP;
+  String log = "Temperatura del trago: " + String(temperatura);
   Serial.println(log);
   return temperatura;
 }

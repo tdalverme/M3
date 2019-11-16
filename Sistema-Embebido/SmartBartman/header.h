@@ -49,6 +49,22 @@ typedef struct {
     int bebida2Porcentaje;
 } Trago;
 /**************************************************/
+/*VARIABLES GLOBALES*/
+/**************************************************/
+static SoftwareSerial BT(PIN_BT_RX, PIN_BT_TX);
+
+static HX711 scale;
+
+void sonarPingRecieved(AsyncSonar& sonar);
+void sonarTimeOut(AsyncSonar& sonar);
+static AsyncSonar sonar(PIN_ULTRASONIDO_TRIG, sonarPingRecieved, sonarTimeOut);
+
+static int estadoActual;               //Variable que contiene el STATE actual
+
+static Trago tragoSeleccionado;
+static ConfigTrago config;
+/**************************************************/
+
 void handleEsperandoInput();
 void handleEsperandoVaso();
 void handleSirviendoBebida();
@@ -62,8 +78,6 @@ ConfigTrago getConfig(Trago trago);
 int getPin(char* bebida);
 float getTemperatura();
 float getTemperaturaDelSensor();
-void sonarPingRecieved(AsyncSonar& sonar);
-void sonarTimeOut(AsyncSonar& sonar);
 
 String getMessage();
 void sendMessage(String message);
