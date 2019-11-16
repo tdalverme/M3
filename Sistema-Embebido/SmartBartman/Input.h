@@ -6,80 +6,50 @@
 #include <SoftwareSerial.h>
 SoftwareSerial BT(PIN_BT_RX, PIN_BT_TX);
 
-typedef struct  {
-  int bebida1;
-  int bebida2;
-  int porcentajeBebida1;
-  int porcentajeBebida2;
+typedef struct {
+    char bebida1[10];
+    char bebida2[10];
+    int bebida1Porcentaje;
+    int bebida2Porcentaje;
 } Trago;
 
-String input;
-char buf[50];
-char caracter;
+String getMessage() {
+  String readString = "";
 
-int getInput() {
+  while (BT.available()) {
+    delay(10);
+    char c = Serial.read();
+    if (c == '@') {
+      break;
+    }
+    readString += c;
+  }
 
-  if(BT.available())
-   {
-      caracter = BT.read();
-     if (caracter != '@') {
-      input += caracter;
-      return 0;
-     }
-     else {
-      Serial.println(input);
-      return 1;
-     }
-
-   } else{
-    return 0;
-   }
+  if (readString.length() > 0) {
+    String log = "Recibe: " + readString;
+    Serial.println(log);
+    return readString;
+  }
+  Serial.println("Input no disponible");
+  return readString;
 }
 
 void sendMessage(String message) {
   BT.println(message);
 }
 
-Trago parseInput() {
-  Trago trago;
+Trago parseInput(char* input){
+    char* tokens[3];
+    Trago tragoRecibido;
 
-  char aux[input.length() + 1];
-  input.toCharArray(aux, input.length()+ 1);
-
-  char *token = strtok(aux, "|");
-
-  if(strcmp(token, "FERNET") == 0) {
-    trago.bebida1 = PIN_RELAY_FERNET;
-    // trago.bebida2 = PIN_RELAY_COCA;
-  }
-  else if(strcmp(token, "COCA") == 0) {
-    trago.bebida1 = PIN_RELAY_COCA;
-  }
-
-  for(int i = 0; i < 2; i++) {
-    token = strtok(NULL, "|");
-    Serial.print("token: ");
-    Serial.println(token);
-    if(i == 0) {
-      trago.porcentajeBebida1 = atoi(token);
+    tokens[0] = strtok(input,"|");
+    for(int i = 1; i < 3; i++){
+        tokens[i] = strtok(NULL,"|");
     }
-    else if(i == 1) {
-      if(strcmp(token, "FERNET") == 0) {
-        trago.bebida2 = PIN_RELAY_FERNET;
-      }
-      else if(strcmp(token, "COCA") == 0) {
-        Serial.println("entro acaaa");
-        trago.bebida2 = PIN_RELAY_COCA;
-      }
-    }
-  }
-  Serial.print("trago 1:");
-  Serial.println(trago.bebida1);
+    strcpy(tragoRecibido.bebida1, tokens[0]);
+    tragoRecibido.bebida1Porcentaje = atoi(tokens[1]);
+    strcpy(tragoRecibido.bebida2, tokens[2]);
+    tragoRecibido.bebida2Porcentaje = 100 - tragoRecibido.bebida1Porcentaje;
 
-  Serial.print("trago 2:");
-  Serial.println(trago.bebida2);
-
-  trago.porcentajeBebida2 = 100 - trago.porcentajeBebida1;
-
-  return trago;
+    return tragoRecibido;
 }
