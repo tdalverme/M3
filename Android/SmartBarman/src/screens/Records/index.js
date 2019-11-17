@@ -52,6 +52,7 @@ export default class Records extends PureComponent {
     graduacionAlc : null,
     estadoAlc : null
   };
+
   
 
   async componentDidMount() {
@@ -109,8 +110,15 @@ export default class Records extends PureComponent {
             source ={imagen} /> 
         </View>
         <View>
+          {
+        graduacionAlc != 0 &&
           <Button title="Ver Detalle"  
           onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+          }
+        </View>
+        <View>
+          <Button title="Volver al menú"  
+          onPress={({navigation})=>{this.props.navigation.navigate('Menu');}}/>
         </View>
       </View>
 
@@ -118,7 +126,8 @@ export default class Records extends PureComponent {
   }
 }
 Records.navigationOptions = ({navigation}) => {
-  return({
-    headerTitle:'Estado Alcohólico',
-  })
+  return{
+    headerTitle: 'Estado Alcohólico',
+    headerLeft:(<View></View>)
+  }
 }

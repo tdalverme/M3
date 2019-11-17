@@ -21,7 +21,14 @@ const Stack = createStackNavigator({
   Register: RegisterScreen,
   FeedBack: feedBack
 }, {
-  initialRouteName: 'Menu'
+  initialRouteName: 'Menu',
+  
+  defaultNavigationOptions: {
+
+      header: null,
+  }
+
+
 });
 
 const App = createAppContainer(Stack);

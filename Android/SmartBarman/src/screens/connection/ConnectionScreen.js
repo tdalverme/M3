@@ -38,8 +38,7 @@ const styles = StyleSheet.create({
 
 class ConnectionScreen extends PureComponent {
   static navigationOptions = {
-    headerMode: 'none',
-    header: null,
+    headerTitle:'Detalle Estado Alcohólico',
   }
   state = {
     devices: [],

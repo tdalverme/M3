@@ -92,7 +92,7 @@ class Home extends Component {
             bebida: this.bebida.name,
             graduacionAlc : this.bebida.graduacionAlc * (this.bebida.ingredient1Percentage*250/100) * 0.80 / 100,
             fecha : new Date(),
-            cantidad : this.bebida.ingredient1Percentage* 250 /100 
+            porcentaje : this.bebida.ingredient1Percentage
             
           });
         });

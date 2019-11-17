@@ -4,9 +4,11 @@ import {
   Button,
   Image,
   View,
-  ToastAndroid
+  ToastAndroid,
+  Text,
+  ImageBackground
 } from 'react-native';
-
+import ButtonMenu from '../../utils/ButtonMenu'
 const Realm = require('realm');
 
 const styles = StyleSheet.create({
@@ -38,8 +40,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 22,
-    color: 'black',
+    fontSize: 25,
+    color: 'white',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
   textLeft: {
@@ -57,46 +60,57 @@ const Menu = ({ navigation }) =>{
           .length == 0
       ) {
           realm.create('Drink',{
-          name: 'Fernet con Coca',
-          ingredient1 : 'FERNET',
-          ingredient1Percentage : 30,
-          ingredient2 : 'COCA',
-          graduacionAlc : 39
+            name: 'Fernet con Coca',
+            ingredient1 : 'FERNET',
+            ingredient1Percentage : 30,
+            ingredient2 : 'COCA',
+            graduacionAlc : 39
           });
       }
+      if (
+        realm.objects('Drink').filter((aux)=>aux.name === 'Gancia con Sprite')
+        .length == 0
+    ) {
+        realm.create('Drink',{
+          name: 'Gancia con Sprite',
+          ingredient1 : 'GANCIA',
+          ingredient1Percentage : 30,
+          ingredient2 : 'SPRITE',
+          graduacionAlc : 39
+        });
+    }
   })
   
-  // .then(function (luminous) {
-  //     // Get current brightness level
-  //     // 0 ~ 1
-  //     console.warn(luminous);
-  // });
   
   return( 
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1,backgroundColor:'red' }}>
+      
+      <ImageBackground style={{
+          flex:1,
+          alignItems:'center',
+          backgroundColor:'blue'
+        }} 
+        source={require('./menu_principal.jpg')}>
+        <View style={{flex:0.7}}>
+            <View style={{flex:0.4,justifyContent:'center'}}>
+              <Text style={styles.title}>SmartBarman</Text>
+            </View>
+            <View  style={{flex:0.6,justifyContent:'flex-start',}}>
+              <ButtonMenu  title="Preparar un trago" 
+              onPress={() => { navigation.navigate('Connection'); }}/>
 
-      <Image source={require('./menu_principal.jpg')} />
-      <View style={styles.container}>
+              <ButtonMenu  title="Ver mi estado alcohólico"
+              onPress={() => { navigation.navigate('Records'); }}/>
 
-        <Button
-          title="Preparar un trago"
-          onPress={() => { navigation.navigate('Connection'); }}
-        />
-        <Button
-          title="Ver mi estado alcoholico"
-          onPress={() => { navigation.navigate('Records'); }}
-        />
-        <Button
-          title="Editar mis datos"
-          onPress={() => { navigation.navigate('Register'); }}
-        />
-      </View>
+              <ButtonMenu  title="Agregar Huella"
+              onPress={() => { navigation.navigate(''); }}/>
+            </View>
+        </View>
+      </ImageBackground>
 
     </View>
 
   );
 }
-Menu.navigationOptions = ({ navigation }) => ({
-  headerTitle: 'SmartDrink',
-});
+
 export default Menu;

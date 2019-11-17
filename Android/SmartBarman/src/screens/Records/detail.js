@@ -100,11 +100,11 @@ export default class DetailScreen extends PureComponent {
 
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal} >
-                <Text>Cantidad </Text>
+                <Text>Pureza </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
-                {parseFloat(item.cantidad).toFixed(2)} ml
+                {parseFloat(item.porcentaje).toFixed(2)} %
                 </Text>
               </View>
             </View>
@@ -132,6 +132,6 @@ export default class DetailScreen extends PureComponent {
 }
 DetailScreen.navigationOptions = ({navigation}) => {
   return({
-    headerTitle:'Detalle Estado Alcoholico',
+    headerTitle:'Detalle Estado Alcohólico',
   })
 }
