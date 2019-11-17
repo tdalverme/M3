@@ -10,6 +10,7 @@ import ConnectionScreen from './screens/connection/ConnectionScreen';
 import RegisterScreen from './screens/register';
 import RecordsScreen from  './screens/Records/';
 import RecordsDetailScreen from  './screens/Records/detail.js';
+import feedBack from  './screens/feedBack';
 
 const Stack = createStackNavigator({
   Records: RecordsScreen ,
@@ -18,6 +19,7 @@ const Stack = createStackNavigator({
   Home: HomeScreen,
   Connection: ConnectionScreen,
   Register: RegisterScreen,
+  FeedBack: feedBack
 }, {
   initialRouteName: 'Menu'
 });

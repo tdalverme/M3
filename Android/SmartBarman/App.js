@@ -19,8 +19,10 @@ const DrinkSchema = {
   name: 'Drink',
   properties: {
     name: 'string',
+    ingredient1:'string',
     ingredient1Percentage: 'float',
-    ingredient2Percentage: 'float'
+    ingredient2:'string',
+    graduacionAlc: 'float'
   }
 };
 

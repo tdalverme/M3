@@ -3,8 +3,8 @@ import {
   View, StyleSheet, ActivityIndicator, Text, Image,
 } from 'react-native';
 
-const coca_image = require('../../../assets/coca-cola.png');
-const fernet_image = require('../../../assets/fernet.jpg');
+const coca_image = require('../../../'+'assets/coca-cola.png');
+const fernet_image = require('../../../'+'assets/fernet.jpg');
 
 const Filling = ({ drink }) => (
   <View style={{
@@ -16,7 +16,7 @@ const Filling = ({ drink }) => (
         padding: 20, textAlign: 'center', fontSize: 18, color: 'white',
       }}
       >
-        Llenando el vaso ...
+        Llenando el vaso con {drink} ...
       </Text>
     </View>
 

@@ -7,7 +7,6 @@ import {
   PermissionsAndroid,
   ActivityIndicator,
   ToastAndroid,
-  FlatList,
   TouchableOpacity
 } from 'react-native';
 
@@ -15,7 +14,6 @@ import BluetoothSerial, {
   withSubscription
 } from "react-native-bluetooth-serial-next";
 
-import { findDevices } from '../../utils/Bluetooth';
 
 const styles = StyleSheet.create({
   container: {
@@ -43,7 +41,6 @@ class ConnectionScreen extends PureComponent {
     headerMode: 'none',
     header: null,
   }
-
   state = {
     devices: [],
     data: '',
@@ -53,14 +50,16 @@ class ConnectionScreen extends PureComponent {
     isEnabled: false,
   };
 
+  constructor(props){
+    super(props)
+    this.navigation = props.navigation
+  }
+
   async componentDidMount() {
+
     this.events = this.props.events;
-
-    this.findDevices();
-
     this.events.on("bluetoothEnabled", () => {
       ToastAndroid.show("Bluetooth activado.", ToastAndroid.SHORT);
-      this.findDevices();
       this.setState({ isEnabled: true });
     });
 
@@ -92,7 +91,7 @@ class ConnectionScreen extends PureComponent {
         );
       }
     });
-
+    
   }
 
   findDevices = async () => {
@@ -106,13 +105,13 @@ class ConnectionScreen extends PureComponent {
 
       this.setState({isEnabled, processing: isEnabled});
       if(isEnabled) {
-        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
+        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05 ')[0];
         if(arduinoBluetooth) {
           this.setState({device: arduinoBluetooth});
           this.connect(arduinoBluetooth.id);
 
         } else {
-          ToastAndroid.show('No se encontró el dispositivo, asegurese que SmartBarman esté conectado.');
+          ToastAndroid.show('No se encontró el dispositivo, asegurese que SmartBarman esté conectado.',ToastAndroid.SHORT);
         }
       }
 
@@ -121,14 +120,22 @@ class ConnectionScreen extends PureComponent {
     }
   }
 
+  
+
   connect = async id => {
+
     this.setState({ processing: true, message: 'Conectandose a SmartBarman' });
 
     try {
-      const connected = await BluetoothSerial.device(id).connect();
+      const isConnect = await BluetoothSerial.device(id).isConnected();
+      let connected = isConnect;
+      if(!connected){
+        connected = await BluetoothSerial.device(id).connect();
+      }
 
-      if (connected) {
+      if ( connected ) {
         this.setState({ processing: false, connected });
+        this.navigation.navigate('Home')
       } else {
         ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
         this.setState({ processing: false, connected });
@@ -162,50 +169,37 @@ class ConnectionScreen extends PureComponent {
   }
 
   render() {
-    const { processing, connected, message, isEnabled } = this.state;
-    const { navigation } = this.props;
+    const { connected, processing,isEnabled,message } = this.state;
     return (
       <View style={styles.container}>
         <View style={{flex: 0.3}}>
           <Text style={styles.welcome}>Smart Barman</Text>
         </View>
-        {
-          processing &&
           <View>
-            <ActivityIndicator size="large" color="#0000ff" />
-            <Text style={{padding: 10, color: 'black'}}>{message}</Text>
+            
+            <Text style={{padding: 10, color: 'black'}}>Bluetooth: {isEnabled?'Habilitado':'Deshabilitado'}</Text>
+            <Text style={{padding: 10, color: 'black'}}>Vinculación:{connected?'Conectado':'Desconectado'} </Text>
           </View>
-        }
-
-        {
-          isEnabled && connected && !processing &&
-          <TouchableOpacity
-            style={{backgroundColor: 'green', margin: 20}}
-            onPress={() => navigation.navigate('Home')}>
-            <Text style={{color: 'white', padding: 10}}> COMENZAR </Text>
-          </TouchableOpacity>
-        }
-        {
-          isEnabled && !connected && !processing &&
-          <TouchableOpacity
-            style={{backgroundColor: 'blue', margin: 20}}
-            onPress={() => this.findDevices()}>
-            <Text style={{color: 'white', padding: 10}}> CONECTARSE </Text>
-          </TouchableOpacity>
-        }
-
-        {
-          !isEnabled &&
-          <Text style={{padding: 10, color: 'black'}}>Debe activar el bluetooth para comenzar.</Text>
-        }
-
+          {
+            processing && 
+            <ActivityIndicator size="large" color="#0000ff" />
+          }
+          {
+            !processing &&  
+            <TouchableOpacity
+              style={{backgroundColor: 'blue', margin: 20}}
+              onPress={() => this.findDevices()}>
+              <Text style={{color: 'white', padding: 10}}>{connected?'Recargar':'Conectar'} </Text>
+            </TouchableOpacity>
+          }
       </View>
     );
   }
 }
 
 
+
 export default withSubscription({
     subscriptionName: 'events',
-    destroyOnWillUnmount: false,
+    destroyOnWillUnmount: true,
 })(ConnectionScreen);

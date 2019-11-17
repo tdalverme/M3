@@ -14,21 +14,49 @@ import BluetoothSerial, {
   withSubscription
 } from "react-native-bluetooth-serial-next";
 
+const Realm = require('realm');
+
 import HomeScreen from './HomeScreen';
 import FillingGlassHOC from './FillingGlassHOC';
-
-
 const HOCComponent = FillingGlassHOC(HomeScreen);
 
+
+// realm.write(() => {
+//   var ID = this.state.input_user_id;
+//   if (
+//     realm.objects('user_details').filtered('user_id =' + input_user_id)
+//       .length > 0
+//   ) {
+//     realm.delete(
+//       realm.objects('user_details').filtered('user_id =' + input_user_id)
+//     );
+//   } 
+// });
+
+// const BDDBebida = {
+//   FERNET:{
+//     graduacion: 39,
+//   },
+//   GANCIA:{
+//     graduacion: 14.8,
+//   }
+// }
+
+let realm;
 class Home extends Component {
   state = {
     glassDetected: false,
     filling: false,
-    drink: ''
+    drink: '',
+    porcentaje: null
   };
 
   async componentDidMount() {
     this.events = this.props.events;
+    this.navigation = this.props.navigation;
+    realm = new Realm({ path: 'UserDatabase.realm' });
+    this.bebida = realm.objects('Drink')[0];
+    
 
     this.events.on("bluetoothDisabled", () => {
       ToastAndroid.show("Bluetooth desactivado.", ToastAndroid.SHORT);
@@ -36,7 +64,6 @@ class Home extends Component {
 
     BluetoothSerial.read(
       (data, intervalId) => {
-        console.warn('entro al read');
         const message = data.replace(/(\r\n|\n|\r)/gm, "");
         this.processData(message);
         if (intervalId) {
@@ -57,11 +84,23 @@ class Home extends Component {
 
   processData = (message) => {
     const {type, data} = this.parseMessage(message);
+    
     switch (type) {
       case 'finished':
-        this.state({filling: false})
+        realm.write(() => {        
+          realm.create('Ingested',{
+            bebida: this.bebida.name,
+            graduacionAlc : this.bebida.graduacionAlc * (this.bebida.ingredient1Percentage*250/100) * 0.80 / 100,
+            fecha : new Date(),
+            cantidad : this.bebida.ingredient1Percentage* 250 /100 
+            
+          });
+        });
+        this.navigation.navigate('FeedBack',{bebida:this.bebida.name})
+        break;
       case 'change':
         this.setState({drink: data});
+        break;
       case 'detected':
         this.setState({glassDetected: data === 'true'});
         break;
@@ -75,8 +114,8 @@ class Home extends Component {
   startFilling = async () => {
     await BluetoothSerial.clear();
     //aca habria que consultar el nivel de alcohol que hay guardado en realm
-    this.setState({filling: true, drink: 'FERNET'}, async () => {
-      await BluetoothSerial.write("FERNET|30|COCA@");
+    this.setState({filling: true, drink: this.bebida.ingredient1,porcentaje:30}, async () => {
+      await BluetoothSerial.write(this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
     });
   }
 
@@ -95,5 +134,5 @@ class Home extends Component {
 
 export default withSubscription({
     subscriptionName: 'events',
-    destroyOnWillUnmount: false,
+    destroyOnWillUnmount: true,
 })(Home);

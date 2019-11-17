@@ -61,21 +61,9 @@ export default class DetailScreen extends PureComponent {
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
  
-    realm.write(() => {  
-      realm.create('Ingested',{ bebida: 'Fernet de Coca',
-      graduacionAlc : 0.30,
-      fecha : new Date(),
-      cantidad : 75
-    });
-      realm.create('Ingested',{ bebida: 'Fernet de Coca',
-      graduacionAlc : 0.30,
-      fecha : new Date(2019,9,26,10,28,0), 
-      cantidad : 75
-    });
-    })
     let r = realm.objects('Ingested').filter((aux) =>
       compararFechas(aux)
-    )//filtrar por fecha
+    )
     this.setState({data:r,loading:false})
   }
 
@@ -105,7 +93,7 @@ export default class DetailScreen extends PureComponent {
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
-                  {parseFloat(item.graduacionAlc).toFixed(2)}% 
+                  {parseFloat(item.graduacionAlc).toFixed(2)} gr
                 </Text> 
               </View>  
             </View>
