@@ -1,5 +1,5 @@
 #include "HX711.h"
-#include "AsyncSonarLib.h"
+//#include "AsyncSonarLib.h"
 #include "Input.h"
 
 /*Aqui se configuran los pines donde debemos conectar el sensor*/
@@ -28,7 +28,7 @@ float sumadorTemp;
 float temperatura;
 
 HX711 scale;
-AsyncSonar sonar(ULTRASONIDO_TRIG);
+//AsyncSonar sonar(ULTRASONIDO_TRIG);
 
 void setup()
 {
@@ -74,13 +74,16 @@ void loop() {
       break;
 
     case ESPERANDO_VASO:
-      sonar.Start();
+      /*
+       sonar.Start();
       delay(50);
       sonar.Update();
       if(sonar.GetMeasureMM() < DISTANCIA_VASO_MAX) {
         estadoActual = SIRVIENDO_BEBIDA;
         Serial.println("En rango");
       }
+      */
+      estadoActual = SIRVIENDO_BEBIDA;
       break;
       
     case SIRVIENDO_BEBIDA:
@@ -91,6 +94,7 @@ void loop() {
       //handleBebidaFinalizada();
       estadoActual = ESPERANDO_INPUT;
       Serial.println("FINALIZADA.");
+      sendMessage("finished");
       break;
 
     default:
@@ -109,11 +113,12 @@ void handleEsperandoInput() {
     estadoActual = ESPERANDO_VASO;
     //estadoActual = SIRVIENDO_BEBIDA;
     digitalWrite(bebidaActual, LOW);
-    ultrasonido.start();
+    //ultrasonido.start();
   }
 }
 
 void handleEsperandoVaso() {
+  /*
   if(ultrasonido.isFinished()) {
     Serial.println("FINISHED");
     if(ultrasonido.getRange() < DISTANCIA_VASO_MAX) {
@@ -123,6 +128,7 @@ void handleEsperandoVaso() {
 
     ultrasonido.start();
   }
+  */
 }
 
 void handleSirviendoBebida() {
@@ -168,6 +174,7 @@ void handleBebidaFinalizada() {
     Serial.print("TEMPERATURA DE TRAGO: ");
     Serial.print(temperatura, 1);
     Serial.println("°C");
+    
     estadoActual = ESPERANDO_INPUT;
   }
 }
