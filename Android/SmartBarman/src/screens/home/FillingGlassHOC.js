@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 
 const coca_image = require('../../../'+'assets/coca-cola.png');
-const fernet_image = require('../../../'+'assets/fernet.jpg');
+const fernet_image = require('../../../'+'assets/fernet_2.jpg');
 
 const Filling = ({ drink }) => (
   <View style={{

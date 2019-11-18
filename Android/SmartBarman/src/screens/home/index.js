@@ -113,10 +113,13 @@ class Home extends Component {
 
   startFilling = async () => {
     await BluetoothSerial.clear();
-    //aca habria que consultar el nivel de alcohol que hay guardado en realm
     this.setState({filling: true, drink: this.bebida.ingredient1,porcentaje:30}, async () => {
       await BluetoothSerial.write(this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
     });
+  }
+
+  navigateMenuHome =  () => {
+    this.navigation.navigate('Menu');
   }
 
   render() {
@@ -126,7 +129,8 @@ class Home extends Component {
         drink={drink}
         filling={filling}
         glassDetected={glassDetected}
-        startFilling={this.startFilling} />
+        startFilling={this.startFilling}
+        navigateMenuHome={this.navigateMenuHome} />
     );
   }
 }

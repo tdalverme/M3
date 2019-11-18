@@ -1,31 +1,31 @@
 import React, {PureComponent} from 'react';
 import {
-  Platform,
   StyleSheet,
   Text,
   View,
   PermissionsAndroid,
   ActivityIndicator,
   ToastAndroid,
-  TouchableOpacity
+  ImageBackground
 } from 'react-native';
 
 import BluetoothSerial, {
   withSubscription
 } from "react-native-bluetooth-serial-next";
+import ButtonMenu from '../../utils/ButtonMenu'
 
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 0.6,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'white',
   },
   welcome: {
-    fontSize: 24,
-    color: 'black',
+    fontSize: 18,
+    color: 'white',
     textAlign: 'center',
+    fontWeight:'bold',
     margin: 10,
   },
 
@@ -35,6 +35,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 });
+messageEnable = 'Su bluetooth se encuentra desactivado'
+messageArduino = 'No se encontró a SmartBarman'
 
 class ConnectionScreen extends PureComponent {
   static navigationOptions = {
@@ -45,7 +47,7 @@ class ConnectionScreen extends PureComponent {
     data: '',
     connected: false,
     processing: false,
-    message: 'No estas conectado al Smart Barman',
+    message: '',
     isEnabled: false,
   };
 
@@ -55,8 +57,9 @@ class ConnectionScreen extends PureComponent {
   }
 
   async componentDidMount() {
-
+    
     this.events = this.props.events;
+    this.findDevices();
     this.events.on("bluetoothEnabled", () => {
       ToastAndroid.show("Bluetooth activado.", ToastAndroid.SHORT);
       this.setState({ isEnabled: true });
@@ -95,35 +98,34 @@ class ConnectionScreen extends PureComponent {
 
   findDevices = async () => {
     try {
-      this.setState({ processing: true, message: 'Buscando a SmartBarman' });
+      this.setState({ processing: true, message: 'Conectando con SmartBarman' });
 
       const [isEnabled, devices] = await Promise.all([
         BluetoothSerial.isEnabled(),
         BluetoothSerial.list()
       ]);
 
-      this.setState({isEnabled, processing: isEnabled});
       if(isEnabled) {
         const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05 ')[0];
         if(arduinoBluetooth) {
           this.setState({device: arduinoBluetooth});
           this.connect(arduinoBluetooth.id);
-
         } else {
-          ToastAndroid.show('No se encontró el dispositivo, asegurese que SmartBarman esté conectado.',ToastAndroid.SHORT);
+          this.setState({message: 'No está conectado a SmartBarman. Revise en sus dispositivos bluethooth vinculados.',processing: false})
         }
+      }else{
+        this.setState({message: 'Active su Bluetooth y conectese con SmartBarman',processing: false})
       }
-
     } catch (e) {
-      ToastAndroid.show(e.message, ToastAndroid.SHORT);
+      this.setState({message: e.message,processing: false});
     }
+    
   }
 
   
 
   connect = async id => {
 
-    this.setState({ processing: true, message: 'Conectandose a SmartBarman' });
 
     try {
       const isConnect = await BluetoothSerial.device(id).isConnected();
@@ -131,9 +133,7 @@ class ConnectionScreen extends PureComponent {
       if(!connected){
         connected = await BluetoothSerial.device(id).connect();
       }
-
       if ( connected ) {
-        this.setState({ processing: false, connected });
         this.navigation.navigate('Home')
       } else {
         ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
@@ -145,53 +145,52 @@ class ConnectionScreen extends PureComponent {
     }
   };
 
-  askForPermissions = async () => {
-    try {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-        {
-          title: 'Acceso a la ubicación',
-          message:
-            'Para poder conectar el bluetooth necesitamos acceso a la ubicación',
-          buttonNegative: 'No quiero conectarme',
-          buttonPositive: 'OK',
-        },
-      );
-      if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        this.scanAndConnect();
-      } else {
-        console.warn('Location permission denied');
-      }
-    } catch (err) {
-      console.warn(err);
-    }
-  }
+  // askForPermissions = async () => {
+  //   try {
+  //     const granted = await PermissionsAndroid.request(
+  //       PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+  //       {
+  //         title: 'Acceso a la ubicación',
+  //         message:
+  //           'Para poder conectar el bluetooth necesitamos acceso a la ubicación',
+  //         buttonNegative: 'No quiero conectarme',
+  //         buttonPositive: 'OK',
+  //       },
+  //     );
+  //     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+  //       this.scanAndConnect();
+  //     } else {
+  //       console.warn('Location permission denied');
+  //     }
+  //   } catch (err) {
+  //     console.warn(err);
+  //   }
+  // }
 
   render() {
-    const { connected, processing,isEnabled,message } = this.state;
+    const {processing,message } = this.state;
     return (
-      <View style={styles.container}>
-        <View style={{flex: 0.3}}>
-          <Text style={styles.welcome}>Smart Barman</Text>
-        </View>
-          <View>
+      
+        <ImageBackground style={{
+          flex:1,
+          alignItems:'center',
+        }}
+        source={require('../../../assets/seleccion_bebida.jpg')}> 
+        <View style={styles.container}>
+          <View style={{flex:0.5,alignItems:'center',justifyContent:'space-between'}}>
+            <Text style={styles.welcome}>{message}</Text>
+          
+              {
+                processing && 
+                <ActivityIndicator color="#efb810" size="large" />
+              }    
+              
+              <ButtonMenu title={processing?'Recargar':'Conectar'}
+              onPress={() => this.findDevices()}/>
             
-            <Text style={{padding: 10, color: 'black'}}>Bluetooth: {isEnabled?'Habilitado':'Deshabilitado'}</Text>
-            <Text style={{padding: 10, color: 'black'}}>Vinculación:{connected?'Conectado':'Desconectado'} </Text>
-          </View>
-          {
-            processing && 
-            <ActivityIndicator size="large" color="#0000ff" />
-          }
-          {
-            !processing &&  
-            <TouchableOpacity
-              style={{backgroundColor: 'blue', margin: 20}}
-              onPress={() => this.findDevices()}>
-              <Text style={{color: 'white', padding: 10}}>{connected?'Recargar':'Conectar'} </Text>
-            </TouchableOpacity>
-          }
-      </View>
+          </View> 
+        </View>
+      </ImageBackground>
     );
   }
 }

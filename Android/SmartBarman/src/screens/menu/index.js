@@ -1,10 +1,7 @@
 import React, { PureComponent } from 'react';
 import {
   StyleSheet,
-  Button,
-  Image,
   View,
-  ToastAndroid,
   Text,
   ImageBackground
 } from 'react-native';
@@ -40,7 +37,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   title: {
-    fontSize: 25,
+    fontSize: 28,
+    fontFamily:'italic',
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
@@ -87,10 +85,9 @@ const Menu = ({ navigation }) =>{
       
       <ImageBackground style={{
           flex:1,
-          alignItems:'center',
-          backgroundColor:'blue'
+          alignItems:'center'
         }} 
-        source={require('./menu_principal.jpg')}>
+        source={require('../../../assets/menu_principal.jpg')}>
         <View style={{flex:0.7}}>
             <View style={{flex:0.4,justifyContent:'center'}}>
               <Text style={styles.title}>SmartBarman</Text>
@@ -111,6 +108,11 @@ const Menu = ({ navigation }) =>{
     </View>
 
   );
+}
+Menu.navigationOptions = ({navigation}) => {
+  return({
+    header:null
+  })
 }
 
 export default Menu;

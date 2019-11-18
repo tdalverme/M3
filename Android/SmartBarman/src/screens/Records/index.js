@@ -8,6 +8,7 @@ import {
   Image,
   Button
 } from 'react-native';
+import ButtonMenu from '../../utils/ButtonMenu'
 
 const Realm = require('realm');
 
@@ -34,13 +35,18 @@ const limitAuto = 0.5
 
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 0.9,
-    justifyContent: 'space-between',
-    backgroundColor: 'white',
-    padding: 10,
+ 
+  fondo:{
+    flex:1,
+    backgroundColor:'#393D42',
+    justifyContent: 'space-around',
   },
-  
+  text2:{
+    textAlign:'center',
+    color:'white',
+    fontWeight:'bold',
+    fontSize:16
+  }
 
 });
 
@@ -95,30 +101,31 @@ export default class Records extends PureComponent {
     
     return (
       loading || imagen == null? 
-      <View style={styles.cargando}>
+      <View style={styles.fondo}>
        <ActivityIndicator/>
       </View>
       :
-      <View style={styles.container}>
-        <View style={{paddingTop:10}}>  
-          <Text>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
-          <Text>Tu nivel es <Text style={{fontWeight:'bold'}}>{propEstado[estadoAlc].estado}</Text></Text>
-          <Text>{propEstado[estadoAlc].mensaje}</Text>
+      <View style={styles.fondo}>
+        <View style={{flex:0.2,justifyContent:'center'}}>  
+          <Text style={styles.text2}>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
+          <Text style={styles.text2}>Tu nivel es <Text style={{color:'#efb810',fontSize:20,fontWeight:'bold'}}>{propEstado[estadoAlc].estado}</Text></Text>
+          <Text style={styles.text2}>{propEstado[estadoAlc].mensaje}</Text>
         </View>
-        <View style={{flex:0.8}}>
+        <View style={{flex:0.5}}>
           <Image style= {{height: '100%',width:'100%'}}
             source ={imagen} /> 
         </View>
-        <View>
+        <View style={{flex:0.3,alignItems:'center'}}>
+        
+          <View style={{flex:1,justifyContent:'center'}}>
           {
-        graduacionAlc != 0 &&
-          <Button title="Ver Detalle"  
-          onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
-          }
-        </View>
-        <View>
-          <Button title="Volver al menú"  
-          onPress={({navigation})=>{this.props.navigation.navigate('Menu');}}/>
+            graduacionAlc != 0 &&
+            <ButtonMenu title="Ver Detalle"  
+            onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+            }
+            <ButtonMenu title="Volver al menú"  
+            onPress={({navigation})=>{this.props.navigation.navigate('Menu');}}/>
+          </View>
         </View>
       </View>
 
@@ -127,7 +134,14 @@ export default class Records extends PureComponent {
 }
 Records.navigationOptions = ({navigation}) => {
   return{
-    headerTitle: 'Estado Alcohólico',
-    headerLeft:(<View></View>)
+    headerLeft:(<View></View>),
+    headerTitle: <View style={{flex:0.85}}>
+    <Text style={{textAlign:'center',
+                  fontSize:22,
+                  color:'white',
+                  fontWeight:'bold'}}>
+      Estado Alcohólico
+    </Text>
+  </View>,
   }
 }

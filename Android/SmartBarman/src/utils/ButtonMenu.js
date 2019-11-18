@@ -9,8 +9,7 @@ const styles = StyleSheet.create({
         paddingHorizontal:20,
         borderRadius:4,
         opacity:0.9,
-        marginTop:10,
-        marginBottom:10
+        margin:10,
     },
     text:{
         textAlign:'center',

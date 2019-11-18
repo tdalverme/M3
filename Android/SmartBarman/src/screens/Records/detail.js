@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#393D42',
     padding: 10,
   },
   containerHorizontal:{
@@ -41,11 +41,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    color: 'black',
+    color: 'white',
     textAlign: 'center',
   },
   textLeft: {
     textAlign: 'left',
+    color: 'white',
   },
 
 });
@@ -71,7 +72,7 @@ export default class DetailScreen extends PureComponent {
     const { loading, data } = this.state;
     return (
       loading?
-      <View style={styles.cargando}>
+      <View style={styles.container}>
        <ActivityIndicator/>
       </View>
       :
@@ -82,14 +83,14 @@ export default class DetailScreen extends PureComponent {
       renderItem = {({ item }) => (
         <View style = {styles.containerHorizontal}>
           <View style = {styles.containerVertical}>
-            <Text >
+            <Text style= {styles.textLeft}>
                { item.bebida }
             </Text>
           </View>
           <View style = {styles.containerVertical}>
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal}> 
-                <Text>Alcohol </Text>
+                <Text  style= {styles.textLeft}>Alcohol </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
@@ -100,7 +101,7 @@ export default class DetailScreen extends PureComponent {
 
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal} >
-                <Text>Pureza </Text>
+                <Text  style= {styles.textLeft}>Pureza </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
@@ -111,7 +112,7 @@ export default class DetailScreen extends PureComponent {
 
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal}>
-                <Text>Fecha </Text>
+                <Text  style= {styles.textLeft}>Fecha </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
