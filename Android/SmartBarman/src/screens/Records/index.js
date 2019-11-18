@@ -6,25 +6,27 @@ import {
   ActivityIndicator,
   View,
   Image,
-  Button
+  ImageBackground,
+  TouchableHighlight
 } from 'react-native';
 import ButtonMenu from '../../utils/ButtonMenu'
+import ButtonSlider from '../../utils/ButtonSlider'
 
 const Realm = require('realm');
 
 propEstado = {
   estadoSobrio :{
-    estado: 'sobrio',
+    estado: 'Sobrio',
     imagen: require('../../../assets/sobrio.jpg'),
     mensaje: 'Estás habilitado para conducir',
   },
   estadoModerado:{
-    estado: 'moderado',
+    estado: 'Moderado',
     imagen: require('../../../assets/moderado.png'),
     mensaje: 'Estás habilitado para conducir',
   },
   estadoEbrio : {
-    estado: 'ebrio',
+    estado: 'Ebrio',
     imagen: require('../../../assets/ebrio.jpg'),
     mensaje: <Text style={{fontWeight:'bold',fontSize:20}}>NO podés conducir</Text>
   }
@@ -38,12 +40,11 @@ const styles = StyleSheet.create({
  
   fondo:{
     flex:1,
-    backgroundColor:'#393D42',
     justifyContent: 'space-around',
   },
   text2:{
     textAlign:'center',
-    color:'white',
+    color:'black',
     fontWeight:'bold',
     fontSize:16
   }
@@ -100,41 +101,57 @@ export default class Records extends PureComponent {
     }
     
     return (
-      loading || imagen == null? 
-      <View style={styles.fondo}>
-       <ActivityIndicator/>
-      </View>
-      :
-      <View style={styles.fondo}>
-        <View style={{flex:0.2,justifyContent:'center'}}>  
-          <Text style={styles.text2}>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
-          <Text style={styles.text2}>Tu nivel es <Text style={{color:'#efb810',fontSize:20,fontWeight:'bold'}}>{propEstado[estadoAlc].estado}</Text></Text>
-          <Text style={styles.text2}>{propEstado[estadoAlc].mensaje}</Text>
-        </View>
-        <View style={{flex:0.5}}>
-          <Image style= {{height: '100%',width:'100%'}}
-            source ={imagen} /> 
-        </View>
-        <View style={{flex:0.3,alignItems:'center'}}>
+      <ImageBackground style={{
+        flex:1,
+        alignItems:'center'
+      }} 
+        source={require('../../../assets/estado_alcoho.jpg')}>
+        {loading || imagen == null? 
         
-          <View style={{flex:1,justifyContent:'center'}}>
-          {
-            graduacionAlc != 0 &&
-            <ButtonMenu title="Ver Detalle"  
-            onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
-            }
-            <ButtonMenu title="Volver al menú"  
-            onPress={({navigation})=>{this.props.navigation.navigate('Menu');}}/>
+        <ActivityIndicator/>
+        
+        :
+        <View style={styles.fondo}>
+          <View style={{flex:0.15,justifyContent:'space-around'}}>  
+          <Text style={{color:'black',fontSize:26,fontWeight:'bold',textAlign:'center'}}>{propEstado[estadoAlc].estado}</Text>
+            <View>
+              <Text style={styles.text2}>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
+              
+              <Text style={styles.text2}>{propEstado[estadoAlc].mensaje}</Text>
+            </View>
           </View>
-        </View>
-      </View>
+          <View style={{flex:0.5}}>
+            <Image style= {{height: '100%',width:'100%'}}
+              source ={imagen} /> 
+          </View>
+          <View style={{flex:0.35,alignItems:'center'}}>
+          
+            <View style={{flex:1,justifyContent:'center'}}>
+            {
+              graduacionAlc != 0 &&
+              <ButtonMenu title="Ver Detalle"  
+              onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+              }
+              
+            </View>
+          </View>
+        </View>}
+      </ImageBackground>
 
     );
   }
 }
 Records.navigationOptions = ({navigation}) => {
   return{
-    headerLeft:(<View></View>),
+    headerLeft:(
+    <View style={{flex:1}}>
+     <TouchableHighlight onPress={()=>navigation.navigate('Menu')}>
+        <Text style = {{padding:20,fontSize:30,color:'#efb810'}}>{'<'}</Text>
+        </TouchableHighlight>
+     </View>),
+    headerStyle: {
+      backgroundColor: '#393D42',
+    },
     headerTitle: <View style={{flex:0.85}}>
     <Text style={{textAlign:'center',
                   fontSize:22,

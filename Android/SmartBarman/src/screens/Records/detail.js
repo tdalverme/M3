@@ -6,7 +6,8 @@ import {
   Text,
   ActivityIndicator,
   FlatList,
-  View
+  View,
+  TouchableHighlight
 } from 'react-native';
 
 const Realm = require('realm');
@@ -134,5 +135,14 @@ export default class DetailScreen extends PureComponent {
 DetailScreen.navigationOptions = ({navigation}) => {
   return({
     headerTitle:'Detalle Estado Alcohólico',
+    headerLeft:(
+      <View style={{flex:1}}>
+        <TouchableHighlight onPress={()=>navigation.navigate('Records')}>
+          <Text style = {{padding:20,fontSize:30,color:'#efb810'}}>{'<'}</Text>
+          </TouchableHighlight>
+        </View>),
+      headerStyle: {
+        backgroundColor: '#393D42',
+    },
   })
 }

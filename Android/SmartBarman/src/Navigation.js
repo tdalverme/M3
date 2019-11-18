@@ -5,7 +5,8 @@ import {
 } from 'react-navigation';
 import {
   Text,
-  View
+  View,
+  TouchableHighlight
 } from 'react-native';
 
 import MenuScreen from './screens/menu';
@@ -29,7 +30,16 @@ const Stack = createStackNavigator({
 }, {
   initialRouteName: 'Menu',
   
-  defaultNavigationOptions: {    
+  defaultNavigationOptions: ({ navigation }) =>(    {    
+    headerLeft:(
+      <View style={{flex:1}}>
+        <TouchableHighlight onPress={()=>navigation.navigate('Menu')}>
+          <Text style = {{padding:20,fontSize:30,color:'#efb810'}}>{'<'}</Text>
+          </TouchableHighlight>
+        </View>),
+      headerStyle: {
+        backgroundColor: '#393D42',
+    },
     headerStyle: {
       backgroundColor: 'black',
     },
@@ -46,7 +56,7 @@ const Stack = createStackNavigator({
       fontSize: 22,
       fontWeight: 'bold',
     },
-  }
+  })
 
 
 });
