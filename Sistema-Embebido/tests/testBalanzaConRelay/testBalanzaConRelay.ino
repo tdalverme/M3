@@ -12,6 +12,11 @@
 HX711 scale;
 
 unsigned long previousMillis;
+unsigned long globalMillis;
+
+
+boolean done1 = false;
+boolean done2 = false;
 
 void setup() {
   Serial.begin(9600);
@@ -25,27 +30,35 @@ void setup() {
   
 }
 
-boolean done1 = false;
-boolean done2 = false;
 
+//firstTop 40   secondTop 100
+int incremental = 5000;
+int count = 1;
 void loop() {
   
-    if(millisPassed(1500) && !done1) {
-      log_float("[RELE_OFF] Time since last measure: ", millis() - previousMillis, "ms");
+    if(millisPassed(incremental) && !done1) {
+      log_float("[RELE_OFF] Worked for: ", millis() - previousMillis, "ms");
       apagarRelay(PIN_RELAY_1);
       done1 = true;
     }
-    if(millisPassed(4500) && !done2) {
-      log_float("[MIDO] Time since last measure: ", millis() - previousMillis, "ms");
+    if(millisPassed(2500 + incremental) && !done2) {
+      log_float("[MIDO] Waited to measure till: ", millis() - previousMillis, "ms");
       getWeight();
       done2 = true;
     }
-    if(millisPassed(6000)){
+    if(millisPassed(5000 + incremental)){
       log_float("[RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");
       encenderRelay(PIN_RELAY_1);      
       done1 = false;
       done2 = false;
       resetMillis();
+      Serial.print("\tCount: ");
+      Serial.println(count);
+      if(count == 2 && incremental > 500)
+        incremental /= 2;
+      if(count == 5 && incremental > 500)
+        incremental /= 2;
+      count ++;
     }
 }
 
@@ -70,6 +83,8 @@ void initBalanza(HX711 * scale, int dout, int clk, float factor) {
 }
 
 void log_float(String msg, float n, String unit) {
+  String now = "[" + String(millis() / 1000) + "s] ";
+  Serial.print(now);
   Serial.print(msg);
   Serial.print(n);
   Serial.println(unit);
