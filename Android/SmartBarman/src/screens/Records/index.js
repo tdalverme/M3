@@ -6,44 +6,48 @@ import {
   ActivityIndicator,
   View,
   Image,
-  Button
+  ImageBackground,
+  TouchableHighlight
 } from 'react-native';
+import ButtonMenu from '../../utils/ButtonMenu'
+import ButtonSlider from '../../utils/ButtonSlider'
 
 const Realm = require('realm');
 
-const estadoSobrio = 0
-const estadoModerado = 1
-const estadoEbrio = 2
-const propEstado = new Array()
+propEstado = {
+  estadoSobrio :{
+    estado: 'Sobrio',
+    imagen: require('../../../assets/sobrio.jpg'),
+    mensaje: 'Estás habilitado para conducir',
+  },
+  estadoModerado:{
+    estado: 'Moderado',
+    imagen: require('../../../assets/moderado.png'),
+    mensaje: 'Estás habilitado para conducir',
+  },
+  estadoEbrio : {
+    estado: 'Ebrio',
+    imagen: require('../../../assets/ebrio.jpg'),
+    mensaje: <Text style={{fontWeight:'bold',fontSize:20}}>NO podés conducir</Text>
+  }
+}
 
-propEstado[estadoSobrio] = {
-  estado: 'sobrio',
-  imagen: require('../../../assets/sobrio.jpg'),
-  mensaje: 'Estás habilitado para conducir',
-}
-propEstado[estadoModerado] = {
-  estado: 'moderado',
-  imagen: require('../../../assets/moderado.png'),
-  mensaje: 'Estás habilitado para conducir',
-}
-propEstado[estadoEbrio] = {
-  estado: 'ebrio',
-  imagen: require('../../../assets/ebrio.jpg'),
-  mensaje: <Text style={{fontWeight:'bold',fontSize:20}}>NO podés conducir</Text>
-}
 const limitSobrio = 0.0
 const limitAuto = 0.5
 
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 0.9,
-    justifyContent: 'space-between',
-
-    backgroundColor: 'white',
-    padding: 10,
+ 
+  fondo:{
+    flex:1,
+    justifyContent: 'space-around',
   },
-  
+  text2:{
+    textAlign:'center',
+    color:'black',
+    fontWeight:'bold',
+    fontSize:16
+  }
 
 });
 
@@ -55,53 +59,36 @@ export default class Records extends PureComponent {
     graduacionAlc : null,
     estadoAlc : null
   };
+
   
 
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
     //Auto Genera lote de prueba
     realm.write(() => {  
-      
-    
-    realm.create('User',{ 
-      username: 'Axel',
-      height: 170,
-      weight: 70
+      realm.create('User',{ 
+        username: 'Axel',
+        height: 170,
+        weight: 70
+      });
     });
-
-      
-    });
-    // for (let index = 0; index < 100; index++) {
-    //   realm.write(() => {        
-    //     realm.create('Ingested',{ bebida: 'fernet con coca',
-    //                              graduacionAlc : 0.10,
-    //                              fecha : '10/10/2019',
-    //                              cantidad : 7
-    //                            });
-    //   });
-    // }
-    //fin lote de prueba
 
     let userConnect = realm.objects('User')[0];let a;let b;
     let tragos = realm.objects('Ingested').filter(aux=>
       compararFechas(aux)
     )
-    let aux = 0 ;
+    let graduacionAlc = 0 ;
     tragos.forEach(t0 => {
-      aux += t0.graduacionAlc * t0.cantidad      
+      graduacionAlc += t0.graduacionAlc  
     });
-    aux /= userConnect.weight
-    if(aux == limitSobrio){
-      this.setState({graduacionAlc:aux,estadoAlc:estadoSobrio,loading:false})
-    }else if(aux < limitAuto){
-      this.setState({graduacionAlc:aux,estadoAlc:estadoModerado,loading:false})
+    graduacionAlc /= userConnect.weight
+    if(graduacionAlc == limitSobrio){
+      this.setState({graduacionAlc,estadoAlc:'estadoSobrio',loading:false})
+    }else if(graduacionAlc < limitAuto){
+      this.setState({graduacionAlc,estadoAlc:'estadoModerado',loading:false})
     }else{
-      this.setState({graduacionAlc:aux,estadoAlc:estadoEbrio,loading:false})
+      this.setState({graduacionAlc,estadoAlc:'estadoEbrio',loading:false})
     }
-    
-
-
-
   }
 
   render() {
@@ -114,32 +101,64 @@ export default class Records extends PureComponent {
     }
     
     return (
-      loading || imagen == null? 
-      <View style={styles.cargando}>
-       <ActivityIndicator/>
-      </View>
-      :
-      <View style={styles.container}>
-        <View style={{paddingTop:10}}>  
-          <Text>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
-          <Text>Tu nivel es <Text style={{fontWeight:'bold'}}>{propEstado[estadoAlc].estado}</Text></Text>
-          <Text>{propEstado[estadoAlc].mensaje}</Text>
-        </View>
-        <View style={{flex:0.8}}>
-          <Image style= {{height: '100%',width:'100%'}}
-            source ={imagen} /> 
-        </View>
-        <View>
-          <Button title="Ver Detalle"  
-          onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
-        </View>
-      </View>
+      <ImageBackground style={{
+        flex:1,
+        alignItems:'center'
+      }} 
+        source={require('../../../assets/estado_alcoho.jpg')}>
+        {loading || imagen == null? 
+        
+        <ActivityIndicator/>
+        
+        :
+        <View style={styles.fondo}>
+          <View style={{flex:0.15,justifyContent:'space-around'}}>  
+          <Text style={{color:'black',fontSize:26,fontWeight:'bold',textAlign:'center'}}>{propEstado[estadoAlc].estado}</Text>
+            <View>
+              <Text style={styles.text2}>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
+              
+              <Text style={styles.text2}>{propEstado[estadoAlc].mensaje}</Text>
+            </View>
+          </View>
+          <View style={{flex:0.5}}>
+            <Image style= {{height: '100%',width:'100%'}}
+              source ={imagen} /> 
+          </View>
+          <View style={{flex:0.35,alignItems:'center'}}>
+          
+            <View style={{flex:1,justifyContent:'center'}}>
+            {
+              graduacionAlc != 0 &&
+              <ButtonMenu title="Ver Detalle"  
+              onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+              }
+              
+            </View>
+          </View>
+        </View>}
+      </ImageBackground>
 
     );
   }
 }
 Records.navigationOptions = ({navigation}) => {
-  return({
-    headerTitle:'Estado Alcohólico',
-  })
+  return{
+    headerLeft:(
+    <View style={{flex:1}}>
+     <TouchableHighlight onPress={()=>navigation.navigate('Menu')}>
+        <Text style = {{padding:20,fontSize:30,color:'#efb810'}}>{'<'}</Text>
+        </TouchableHighlight>
+     </View>),
+    headerStyle: {
+      backgroundColor: '#393D42',
+    },
+    headerTitle: <View style={{flex:0.85}}>
+    <Text style={{textAlign:'center',
+                  fontSize:22,
+                  color:'white',
+                  fontWeight:'bold'}}>
+      Estado Alcohólico
+    </Text>
+  </View>,
+  }
 }

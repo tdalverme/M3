@@ -6,7 +6,8 @@ import {
   Text,
   ActivityIndicator,
   FlatList,
-  View
+  View,
+  TouchableHighlight
 } from 'react-native';
 
 const Realm = require('realm');
@@ -15,7 +16,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    backgroundColor: 'white',
+    backgroundColor: '#393D42',
     padding: 10,
   },
   containerHorizontal:{
@@ -41,11 +42,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 22,
-    color: 'black',
+    color: 'white',
     textAlign: 'center',
   },
   textLeft: {
     textAlign: 'left',
+    color: 'white',
   },
 
 });
@@ -61,21 +63,9 @@ export default class DetailScreen extends PureComponent {
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
  
-    realm.write(() => {  
-      realm.create('Ingested',{ bebida: 'Fernet de Coca',
-      graduacionAlc : 0.30,
-      fecha : new Date(),
-      cantidad : 75
-    });
-      realm.create('Ingested',{ bebida: 'Fernet de Coca',
-      graduacionAlc : 0.30,
-      fecha : new Date(2019,9,26,10,28,0), 
-      cantidad : 75
-    });
-    })
     let r = realm.objects('Ingested').filter((aux) =>
       compararFechas(aux)
-    )//filtrar por fecha
+    )
     this.setState({data:r,loading:false})
   }
 
@@ -83,7 +73,7 @@ export default class DetailScreen extends PureComponent {
     const { loading, data } = this.state;
     return (
       loading?
-      <View style={styles.cargando}>
+      <View style={styles.container}>
        <ActivityIndicator/>
       </View>
       :
@@ -94,36 +84,36 @@ export default class DetailScreen extends PureComponent {
       renderItem = {({ item }) => (
         <View style = {styles.containerHorizontal}>
           <View style = {styles.containerVertical}>
-            <Text >
+            <Text style= {styles.textLeft}>
                { item.bebida }
             </Text>
           </View>
           <View style = {styles.containerVertical}>
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal}> 
-                <Text>Alcohol </Text>
+                <Text  style= {styles.textLeft}>Alcohol </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
-                  {parseFloat(item.graduacionAlc).toFixed(2)}% 
+                  {parseFloat(item.graduacionAlc).toFixed(2)} gr
                 </Text> 
               </View>  
             </View>
 
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal} >
-                <Text>Cantidad </Text>
+                <Text  style= {styles.textLeft}>Pureza </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
-                {parseFloat(item.cantidad).toFixed(2)} ml
+                {parseFloat(item.porcentaje).toFixed(2)} %
                 </Text>
               </View>
             </View>
 
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal}>
-                <Text>Fecha </Text>
+                <Text  style= {styles.textLeft}>Fecha </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
@@ -144,6 +134,15 @@ export default class DetailScreen extends PureComponent {
 }
 DetailScreen.navigationOptions = ({navigation}) => {
   return({
-    headerTitle:'Detalle Estado Alcoholico',
+    headerTitle:'Detalle Estado Alcohólico',
+    headerLeft:(
+      <View style={{flex:1}}>
+        <TouchableHighlight onPress={()=>navigation.navigate('Records')}>
+          <Text style = {{padding:20,fontSize:30,color:'#efb810'}}>{'<'}</Text>
+          </TouchableHighlight>
+        </View>),
+      headerStyle: {
+        backgroundColor: '#393D42',
+    },
   })
 }

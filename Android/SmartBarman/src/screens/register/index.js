@@ -48,6 +48,7 @@ const styles = StyleSheet.create({
 let realm;
 
 export default class RegisterScreen extends PureComponent {
+  
   state = {
     username: '',
     height: '',
