@@ -121,11 +121,11 @@ class HomeScreen extends PureComponent {
           </View>
           <View style={{flex:0.3,alignItems:'center'}}>
             <ButtonMenu title={'Comenzar'} onPress={() => {
-              if(!glassDetected) {
-                ToastAndroid.show("Debe posicionar el vaso para comenzar", ToastAndroid.SHORT);
-              } else {
+              // if(!glassDetected) {
+              //   ToastAndroid.show("Debe posicionar el vaso para comenzar", ToastAndroid.SHORT);
+              // } else {
                 startFilling();
-              }
+              // }
             }}/>
           {/* <ButtonMenu title={'Volver al Inicio'} onPress=/> */}
 

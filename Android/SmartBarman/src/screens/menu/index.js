@@ -131,7 +131,7 @@ const Menu = ({ navigation }) => {
           <View style={{ flex: 0.6, justifyContent: 'flex-start' }}>
             <ButtonMenu
               title="Preparar un trago"
-              onPress={() => { authenticate(navigation, 'Home'); }}
+              onPress={() => { authenticate(navigation, 'Connection'); }}
             />
 
             <ButtonMenu

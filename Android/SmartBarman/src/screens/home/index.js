@@ -30,7 +30,7 @@ const HOCComponent = FillingGlassHOC(HomeScreen);
 //     realm.delete(
 //       realm.objects('user_details').filtered('user_id =' + input_user_id)
 //     );
-//   } 
+//   }
 // });
 
 // const BDDBebida = {
@@ -56,7 +56,7 @@ class Home extends Component {
     this.navigation = this.props.navigation;
     realm = new Realm({ path: 'UserDatabase.realm' });
     this.bebida = realm.objects('Drink')[0];
-    
+
 
     this.events.on("bluetoothDisabled", () => {
       ToastAndroid.show("Bluetooth desactivado.", ToastAndroid.SHORT);
@@ -84,16 +84,16 @@ class Home extends Component {
 
   processData = (message) => {
     const {type, data} = this.parseMessage(message);
-    
+
     switch (type) {
       case 'finished':
-        realm.write(() => {        
+        realm.write(() => {
           realm.create('Ingested',{
             bebida: this.bebida.name,
             graduacionAlc : this.bebida.graduacionAlc * (this.bebida.ingredient1Percentage*250/100) * 0.80 / 100,
             fecha : new Date(),
             porcentaje : this.bebida.ingredient1Percentage
-            
+
           });
         });
         this.navigation.navigate('FeedBack',{bebida:this.bebida.name})
@@ -112,9 +112,10 @@ class Home extends Component {
   }
 
   startFilling = async () => {
-    await BluetoothSerial.clear();
     this.setState({filling: true, drink: this.bebida.ingredient1,porcentaje:30}, async () => {
-      await BluetoothSerial.write(this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
+      console.warn(this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@');
+      await BluetoothSerial.clear();
+      await BluetoothSerial.write('#' + this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
     });
   }
 

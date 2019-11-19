@@ -29,8 +29,8 @@ const Stack = createStackNavigator({
   homeScreenComponent: HomeScreenComponent
 }, {
   initialRouteName: 'Menu',
-  
-  defaultNavigationOptions: ({ navigation }) =>(    {    
+
+  defaultNavigationOptions: ({ navigation }) =>(    {
     headerLeft:(
       <View style={{flex:1}}>
         <TouchableHighlight onPress={()=>navigation.navigate('Menu')}>

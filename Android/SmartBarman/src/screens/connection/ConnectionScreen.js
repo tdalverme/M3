@@ -57,7 +57,7 @@ class ConnectionScreen extends PureComponent {
   }
 
   async componentDidMount() {
-    
+
     this.events = this.props.events;
     this.findDevices();
     this.events.on("bluetoothEnabled", () => {
@@ -93,7 +93,7 @@ class ConnectionScreen extends PureComponent {
         );
       }
     });
-    
+
   }
 
   findDevices = async () => {
@@ -106,7 +106,7 @@ class ConnectionScreen extends PureComponent {
       ]);
 
       if(isEnabled) {
-        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05 ')[0];
+        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
         if(arduinoBluetooth) {
           this.setState({device: arduinoBluetooth});
           this.connect(arduinoBluetooth.id);
@@ -119,17 +119,14 @@ class ConnectionScreen extends PureComponent {
     } catch (e) {
       this.setState({message: e.message,processing: false});
     }
-    
+
   }
 
-  
+
 
   connect = async id => {
-
-
     try {
-      const isConnect = await BluetoothSerial.device(id).isConnected();
-      let connected = isConnect;
+      let connected = await BluetoothSerial.device(id).isConnected();
       if(!connected){
         connected = await BluetoothSerial.device(id).connect();
       }
@@ -170,25 +167,25 @@ class ConnectionScreen extends PureComponent {
   render() {
     const {processing,message } = this.state;
     return (
-      
+
         <ImageBackground style={{
           flex:1,
           alignItems:'center',
         }}
-        source={require('../../../assets/seleccion_bebida.jpg')}> 
+        source={require('../../../assets/seleccion_bebida.jpg')}>
         <View style={styles.container}>
           <View style={{flex:0.5,alignItems:'center',justifyContent:'space-between'}}>
             <Text style={styles.welcome}>{message}</Text>
-          
+
               {
-                processing && 
+                processing &&
                 <ActivityIndicator color="#efb810" size="large" />
-              }    
-              
+              }
+
               <ButtonMenu title={processing?'Recargar':'Conectar'}
               onPress={() => this.findDevices()}/>
-            
-          </View> 
+
+          </View>
         </View>
       </ImageBackground>
     );
