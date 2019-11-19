@@ -119,7 +119,7 @@ void handleEsperandoVaso() {
 
 void siguienteBebida() {
   config.pinBebidaActual = config.pinBebida2;
-  config.pesoObjetivo = segundoTopeEnGramos;
+  config.pesoObjetivo += segundoTopeEnGramos;
   incremental = segundoIncremental;
   Serial.println("[SIRVIENDO_BEBIDA][CAMBIO] Siguiente bebida");
   sendMessage("change|COCA");
@@ -145,9 +145,9 @@ void handleSirviendoBebida() {
         pesoActual = getWeight();
         done2 = true;
       }
-      if(millisPassed(5000 + incremental)){
-
-        Serial.println("[SIRVIENDO_BEBIDA][CHECKING_WEIGHT] Verificando peso");
+       if(millisPassed(5000 + incremental)){
+        
+        log_float("[SIRVIENDO_BEBIDA][RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");        
         if(pesoActual >= PESO_MAX){
           finished = true;
           Serial.println("[SIRVIENDO_BEBIDA][FINISHED] Bebida lista");
@@ -158,12 +158,10 @@ void handleSirviendoBebida() {
           incremental /= 2;
         done1 = false;
         done2 = false;
-        if(!finished){
-          log_float("[SIRVIENDO_BEBIDA][RELE_ON] Tiempo desde la ultima medicion: ", millis() - previousMillis, "ms");
+        resetMillis();
+        if(!finished)
           encenderRelay(config.pinBebidaActual);
-        }
-        else
-          resetMillis();
+        
       }
     }
     else {
