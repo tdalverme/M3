@@ -138,6 +138,7 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-touch-id')
     implementation project(':realm')
     implementation project(':react-native-gesture-handler')
     implementation project(':react-native-bluetooth-serial-next')
