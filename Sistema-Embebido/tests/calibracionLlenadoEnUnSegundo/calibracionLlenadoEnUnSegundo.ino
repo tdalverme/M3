@@ -22,41 +22,51 @@ void setup() {
   initBalanza(&scale, BALANZA_DOUT, BALANZA_CLK, FACTOR_CALIBRACION);
   pinMode(PIN_RELAY_1, OUTPUT);
   pinMode(PIN_RELAY_2, OUTPUT);
-  encenderRelay(PIN_RELAY_1);
+  apagarRelay(PIN_RELAY_1);
   apagarRelay(PIN_RELAY_2);
   previousMillis = millis();
-  log_float("[RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");
   
 }
 
-int incremental = 5000;
-int count = 1;
+boolean firstMeasuresDone = false;
+boolean filled = false;
+boolean finished = false;
+boolean finalMeasures = false;
+
+/**
+ * En 3 segundos -> llena 16/17 g
+ * En 2 segundos -> llena 10/11 g
+ * En 1 segundo -> no llega a tirar liquido
+ */
+
 void loop() {
-  
-    if(millisPassed(incremental) && !done1) {
-      log_float("[RELE_OFF] Worked for: ", millis() - previousMillis, "ms");
-      apagarRelay(PIN_RELAY_1);
-      done1 = true;
-    }
-    if(millisPassed(2500 + incremental) && !done2) {
-      log_float("[MIDO] Waited to measure till: ", millis() - previousMillis, "ms");
+  if(millisPassed(1000) && !firstMeasuresDone) {
+    Serial.println("Getting a few measures before starting");
+    for(int i = 0; i < 5; i++){
       getWeight();
-      done2 = true;
     }
-    if(millisPassed(5000 + incremental)){
-      log_float("[RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");
-      encenderRelay(PIN_RELAY_1);      
-      done1 = false;
-      done2 = false;
-      resetMillis();
-      Serial.print("\tCount: ");
-      Serial.println(count);
-      if(count == 2 && incremental > 500)
-        incremental /= 2;
-      if(count == 5 && incremental > 500)
-        incremental /= 2;
-      count ++;
+    firstMeasuresDone = true;
+  }
+  
+  if(millisPassed(5000) && !filled) {
+    log_float("[RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");
+    encenderRelay(PIN_RELAY_1);
+    filled = true;
+  }
+
+  if(millisPassed(7000) && !finished) {
+    apagarRelay(PIN_RELAY_1);
+    log_float("[RELE_OFF] Worked for: ", millis() - previousMillis, "ms");
+    finished = true;
+  }
+
+  if(millisPassed(8000)) {
+    Serial.println("Getting final measures");
+    for(int i = 0; i < 10; i++){
+      getWeight();
     }
+    finalMeasures = true;
+  }
 }
 
 float getWeight() {
