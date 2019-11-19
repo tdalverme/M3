@@ -1,6 +1,4 @@
 #include "Input.h"
-//#include "AsyncSonarLib.h"
-//AsyncSonar sonar(PIN_ULTRASONIDO_TRIG);
 
 /****************************************/
 int estadoActual;
@@ -12,6 +10,9 @@ void setup() {
 
   pinMode(PIN_RELAY_FERNET, OUTPUT);
   pinMode(PIN_RELAY_COCA, OUTPUT);
+
+  pinMode(PIN_ULTRASONIDO_TRIG, OUTPUT); // Sets the trigPin as an Output
+  pinMode(PIN_ULTRASONIDO_ECHO, INPUT); // Sets the echoPin as an Input
 
   apagarRelay(PIN_RELAY_FERNET);
   apagarRelay(PIN_RELAY_COCA);
@@ -90,6 +91,7 @@ boolean finished;
 /****************************************/
 
 void handleEsperandoVaso() {
+  
   Serial.println("[ESPERANDO_VASO] Not implemented yet");
   estadoActual = STATE_SIRVIENDO_BEBIDA;
   Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
@@ -113,8 +115,17 @@ void handleEsperandoVaso() {
   Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
   Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
   previousMillis = millis();
-  sendMessage("change|FERNET");
-  encenderRelay(config.pinBebidaActual);
+
+  if(measureGlassPosition()) {
+    sendMessage("detected|true");
+    sendMessage("change|FERNET");
+    encenderRelay(config.pinBebidaActual);  
+    estadoActual = STATE_SIRVIENDO_BEBIDA;
+  } else {
+    sendMessage("detected|false");
+    estadoActual = STATE_SIRVIENDO_BEBIDA;
+  }
+  
 }
 
 void siguienteBebida() {
@@ -131,9 +142,28 @@ boolean done2 = false;
 float pesoActual;
 /****************************************/
 
-void handleSirviendoBebida() {
+boolean measureGlassPosition() {
+  long duration;
+  int distance;
+  // Clears the trigPin
+  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(PIN_ULTRASONIDO_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(PIN_ULTRASONIDO_ECHO, HIGH);
+  // Calculating the distance
+  distance= duration * 0.034/2;
+  Serial.print("Distance: ");
+  Serial.println(distance);
 
-    if(!finished){
+  return (distance > 100);
+}
+
+void handleSirviendoBebida() {
+    if(!finished && measureGlassPosition()) {
 
       if(millisPassed(incremental) && !done1) {
         apagarRelay(config.pinBebidaActual);
