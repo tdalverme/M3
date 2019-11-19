@@ -110,14 +110,6 @@ class HomeScreen extends PureComponent {
             <View style={{flex:0.2,justifyContent:'flex-start'}}>
               <Text style={styles.text}>Fernet con Coca</Text>
             </View>
-            {/* <Picker
-              selectedValue={this.state.value|| '0'}
-              items={this.bebida}
-              onValueChange={(valor,indice) => {
-                this.setState({bebida:valor.name})
-              }}>
-                {serviceBebida}
-            </Picker> */}
           </View>
           <View style={{flex:0.3,alignItems:'center'}}>
             <ButtonMenu title={'Comenzar'} onPress={() => {
@@ -127,7 +119,6 @@ class HomeScreen extends PureComponent {
                 startFilling();
               }
             }}/>
-          {/* <ButtonMenu title={'Volver al Inicio'} onPress=/> */}
 
           </View>
           <View style={{flex:0.5,justifyContent:'flex-end'}}>
