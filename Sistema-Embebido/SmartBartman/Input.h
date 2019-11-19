@@ -1,9 +1,15 @@
 //Config pines relay
 #define PIN_RELAY_FERNET 8
 #define PIN_RELAY_COCA 7
+#define MINIMO_SERVIDO_TIEMPO 2000
+#define MINIMO_SERVIDO_GRAMOS 10
+#define PESO_MAX 100
 //Config pines bluetooth
 #define PIN_BT_RX 10
 #define PIN_BT_TX 11
+#define BT_MSG_OK 1
+#define BT_MSG_NOT_AVAILABLE 0
+#define BT_MSG_PENDING 2
 //Config celda de carga
 #define PIN_BALANZA_DOUT  A1
 #define PIN_BALANZA_CLK  A0
@@ -12,15 +18,10 @@
 #define PIN_ULTRASONIDO_INT 0
 #define PIN_ULTRASONIDO_TRIG 4
 #define PIN_ULTRASONIDO_ECHO 3
+#define DISTANCIA_VASO_MAX 200
 //Config sensor de temperatura
 #define PIN_SENSOR_TEMP A2
 #define CANT_MEDICIONES_TEMP 10
-//Config de valores propios del proyecto
-#define DISTANCIA_VASO_MAX 200
-#define PESO_MAX 100
-
-#define MINIMO_SERVIDO_TIEMPO 2000
-#define MINIMO_SERVIDO_GRAMOS 10
 
 //Estados posibles
 #define STATE_ESPERANDO_INPUT 20
@@ -63,20 +64,21 @@ String bluetoothMsg;
 
 int getBluetoothMsg() {
   if(BT.available()) {
-      char c = BT.read();
-     if (c != '@') {
+    delay(50);
+    char c = BT.read();
+    if (c != '@') {
       bluetoothMsg += c;
-      return 0;
-     }
-     else {
-      Serial.print("[ESPERANDO_INPUT] ");      
+      return BT_MSG_PENDING;
+    }
+    else {
+      Serial.print("[ESPERANDO_INPUT] ");
       Serial.println(bluetoothMsg);
       Serial.print("[BYTES_READ] ");
       Serial.println(bluetoothMsg.length());
-      return 1;
-     }
-   }
-   return 0;
+      return BT_MSG_OK;
+    }
+  }
+  return BT_MSG_NOT_AVAILABLE;
 }
 
 void sendMessage(String message) {
@@ -94,11 +96,11 @@ Trago parseInput(String bluetoothMsg) {
   Serial.println(bluetoothMsg.length());
   Serial.println(_bluetoothMsg);
   Serial.println(sizeof(_bluetoothMsg));
-  
+
   delay(1000);
   tokens[0] = strtok(_bluetoothMsg,"|");
   for(int i = 1; i < 3; i++) {
-      tokens[i] = strtok(NULL,"|");
+    tokens[i] = strtok(NULL,"|");
   }
   Serial.println(tokens[0]);
   Serial.println(tokens[1]);
@@ -128,9 +130,9 @@ Trago parseInput(String bluetoothMsg) {
 //Obtiene el pin que corresponde a esa bebida
 int getPin(char* bebida) {
   if(strcmp(bebida, "FERNET") == 0)
-    return PIN_RELAY_FERNET;
+  return PIN_RELAY_FERNET;
   else if(strcmp(bebida, "COCA") == 0)
-    return PIN_RELAY_COCA;
+  return PIN_RELAY_COCA;
 }
 
 //Setea pines x bebida y porcentajes de cada una
@@ -156,11 +158,11 @@ ConfigTrago getConfig(Trago trago) {
   Serial.println(config.pesoObjetivo);
   Serial.print("\tPin bebida actual: ");
   Serial.println(config.pinBebidaActual);
-  
+
   return config;
 }
 
-                /*UTILS*/
+/*UTILS*/
 /****************************************/
 void encenderRelay(int pin) {
   digitalWrite(pin, LOW);
@@ -183,9 +185,9 @@ float getWeight() {
   for(int i = 0; i < 10; i++){
     pesoActual = scale.get_units(3);
     if( pesoActual >= 0)
-      break;
+    break;
     else
-      pesoActual = -999;
+    pesoActual = -999;
   }
   log_float("\t\tPeso actual: ", pesoActual, "g");
   return pesoActual;
