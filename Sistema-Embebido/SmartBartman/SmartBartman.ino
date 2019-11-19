@@ -1,100 +1,48 @@
-#include "HX711.h"
 //#include "AsyncSonarLib.h"
 #include "Input.h"
 
-/*Aqui se configuran los pines donde debemos conectar el sensor*/
-#define BALANZA_DOUT  A1
-#define BALANZA_CLK  A0
-#define FACTOR_CALIBRACION -1060
-
-#define ULTRASONIDO_INT 0
-#define ULTRASONIDO_TRIG 4
-#define ULTRASONIDO_ECHO 3
-
-#define SENSOR_TEMP A2
-#define CANT_MEDICIONES_TEMP 10
-
-#define DISTANCIA_VASO_MAX 200
-#define PESO_MAX 200
-
-#define ESPERANDO_INPUT 20
-#define ESPERANDO_VASO 21
-#define SIRVIENDO_BEBIDA 22
-#define BEBIDA_FINALIZADA 23
-
 int estadoActual;
-int cantMediciones;
-float sumadorTemp;
-float temperatura;
 
-HX711 scale;
-//AsyncSonar sonar(ULTRASONIDO_TRIG);
+//AsyncSonar sonar(PIN_ULTRASONIDO_TRIG);
 
-void setup()
-{
-  Serial.begin(9600); //Abrimos la comunicación serie con el PC y establecemos velocidad
-  BT.begin(9600); //Velocidad del puerto del módulo Bluetooth
-  initBalanza(&scale, BALANZA_DOUT, BALANZA_CLK, FACTOR_CALIBRACION);
+void setup() {
+  Serial.begin(9600);       //Abrimos la comunicación serie con el PC y establecemos velocidad
+  BT.begin(9600);           //Velocidad del puerto del módulo Bluetooth
+  initBalanza();
 
-  /**
-  scale.begin(BALANZA_DOUT, BALANZA_CLK);
-  scale.set_scale();
-  scale.tare();
+  pinMode(PIN_RELAY_FERNET, OUTPUT);
+  pinMode(PIN_RELAY_COCA, OUTPUT);
 
-  scale.set_scale(-1060);
-  **/
+  apagarRelay(PIN_RELAY_FERNET);
+  apagarRelay(PIN_RELAY_COCA);
 
-  pinMode(FERNET, OUTPUT);
-  pinMode(COCA, OUTPUT);
-  digitalWrite(FERNET, HIGH);
-  digitalWrite(COCA, HIGH);
-  
-  estadoActual = ESPERANDO_INPUT;
-  cantMediciones = 0;
-  sumadorTemp = 0;
+  estadoActual = STATE_ESPERANDO_INPUT;
+
+  Serial.println("[SETUP] Setup terminado");
+  Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
 }
 
-//String input;
+/****************************************/
 Trago tragoSeleccionado;
-int bebida1;
-int bebida2;
-int porcentajeBebida1;
-int porcentajeBebida2;
-
-int bebidaActual;
-float pesoObjetivo;
-float pesoActual;
+ConfigTrago config;
+/****************************************/
 
 void loop() {
   switch(estadoActual) {
-    case ESPERANDO_INPUT:
-      //Serial.print("PESO ACTUAL: ");
-      //Serial.println(pesoActual);
+    case STATE_ESPERANDO_INPUT:
       handleEsperandoInput();
       break;
 
-    case ESPERANDO_VASO:
-      /*
-       sonar.Start();
-      delay(50);
-      sonar.Update();
-      if(sonar.GetMeasureMM() < DISTANCIA_VASO_MAX) {
-        estadoActual = SIRVIENDO_BEBIDA;
-        Serial.println("En rango");
-      }
-      */
-      estadoActual = SIRVIENDO_BEBIDA;
+    case STATE_ESPERANDO_VASO:
+      handleEsperandoVaso();
       break;
-      
-    case SIRVIENDO_BEBIDA:
+
+    case STATE_SIRVIENDO_BEBIDA:
       handleSirviendoBebida();
       break;
-      
-    case BEBIDA_FINALIZADA:
-      //handleBebidaFinalizada();
-      estadoActual = ESPERANDO_INPUT;
-      Serial.println("FINALIZADA.");
-      sendMessage("finished");
+
+    case STATE_BEBIDA_FINALIZADA:
+      handleBebidaFinalizada();
       break;
 
     default:
@@ -103,90 +51,146 @@ void loop() {
 }
 
 void handleEsperandoInput() {
-  if(getInput() == 1) { 
-    tragoSeleccionado = parseInput();
-    bebidaActual = tragoSeleccionado.bebida1;
-    bebida2 = tragoSeleccionado.bebida2;
-    porcentajeBebida1 = tragoSeleccionado.porcentajeBebida1;
-    porcentajeBebida2 = tragoSeleccionado.porcentajeBebida2;
-    pesoObjetivo = PESO_MAX * tragoSeleccionado.porcentajeBebida1 / 100; 
-    estadoActual = ESPERANDO_VASO;
-    //estadoActual = SIRVIENDO_BEBIDA;
-    digitalWrite(bebidaActual, LOW);
-    //ultrasonido.start();
+  if(getBluetoothMsg() == 1) {
+    tragoSeleccionado = parseInput(&bluetoothMsg[0]);
+    bluetoothMsg = "";
+    config = getConfig(tragoSeleccionado);
+    estadoActual = STATE_ESPERANDO_VASO;
   }
 }
+
+/****************************************/
+unsigned long previousMillis;
+int primerIncremental;
+int segundoIncremental;
+int incremental;
+/****************************************/
+
+boolean millisPassed(long n) {
+  return millis() - previousMillis >= n;
+}
+
+void resetMillis() {
+  previousMillis = millis();
+}
+
+//200g = FERNET 30% + COCA 70%
+//200g = 200g / 100 * 30 + 200g / 100 * 70
+//200g = 60g + 140g
+
+//2000 ms => 10g
+//x ms => 60g    12000 ms => 60g
+//primerIncremental = 60g * 2000 / 10 = 12000s
+//60g ~= 30g + 15g + 10g +10g
+
+int primerTopeEnGramos;
+int segundoTopeEnGramos;
 
 void handleEsperandoVaso() {
-  /*
-  if(ultrasonido.isFinished()) {
-    Serial.println("FINISHED");
-    if(ultrasonido.getRange() < DISTANCIA_VASO_MAX) {
-      estadoActual = SIRVIENDO_BEBIDA;
-      Serial.println("En rango");
-    }
-
-    ultrasonido.start();
-  }
-  */
+  Serial.println("[ESPERANDO_VASO] Not implemented yet");
+  estadoActual = STATE_SIRVIENDO_BEBIDA;
+  Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
+  
+  primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
+  segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
+  primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+  segundoIncremental = (int) (segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+  incremental = primerIncremental;
+  
+  Serial.print("\tPrimer tope: ");
+  Serial.print(primerTopeEnGramos);
+  Serial.print("\tPrimer incremental: ");
+  Serial.println(primerIncremental);
+  Serial.print("\tSegundo tope: ");
+  Serial.print(segundoTopeEnGramos);
+  Serial.print("\tSegundo incremental: ");
+  Serial.println(segundoIncremental);
+  
+  Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
+  delay(3000);
+  Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
+  previousMillis = millis();
+  sendMessage("change|FERNET");
+  encenderRelay(config.pinBebidaActual);
 }
+
+void siguienteBebida() {
+  config.pinBebidaActual = config.pinBebida2;
+  config.pesoObjetivo = segundoTopeEnGramos;
+  incremental = segundoIncremental;
+  Serial.println("[SIRVIENDO_BEBIDA][CAMBIO] Siguiente bebida");
+  sendMessage("change|COCA");
+}
+
+/****************************************/
+boolean done1 = false;
+boolean done2 = false;
+boolean finished = false;
+float pesoActual;
+/****************************************/
 
 void handleSirviendoBebida() {
-  digitalWrite(bebidaActual, HIGH);
-  delay(500);
-  pesoActual = scale.get_units(3);
-  
-  Serial.print("PESO ACTUAL: ");
-  Serial.println(pesoActual);
 
-  Serial.print("BOMBA: ");
-  Serial.println(bebidaActual);
-  
-  if(pesoActual >= pesoObjetivo) {
-    if(bebidaActual == bebida2) {
-      estadoActual = BEBIDA_FINALIZADA;
-      digitalWrite(bebidaActual, HIGH);
-    }
+    if(!finished){
+      if(millisPassed(incremental) && !done1) {
+      apagarRelay(config.pinBebidaActual);
+      log_float("[SIRVIENDO_BEBIDA][RELE_OFF] Filled for: ", millis() - previousMillis, "ms");
+      done1 = true;
+      }
+      if(millisPassed(2500 + incremental) && !done2) {
+        log_float("[SIRVIENDO_BEBIDA][WEIGHT] Waited to measure till: ", millis() - previousMillis, "ms");
+        pesoActual = getWeight();
+        done2 = true;
+      }
+      if(millisPassed(5000 + incremental)){
+        
+        log_float("[SIRVIENDO_BEBIDA][RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");        
+        if(pesoActual >= PESO_MAX){
+          finished = true;
+          Serial.println("[SIRVIENDO_BEBIDA][FINISHED] Bebida lista");
+        }
+        else if(pesoActual >= config.pesoObjetivo)
+          siguienteBebida();
+        else if(incremental > MINIMO_SERVIDO_TIEMPO)
+          incremental /= 2;
+        done1 = false;
+        done2 = false;
+        resetMillis();
+        if(!finished)
+          encenderRelay(config.pinBebidaActual);
+        
+      }
+    } 
     else {
-      sendMessage("change|COCA");
-      digitalWrite(bebidaActual, HIGH);
-      sendMessage("change|COCA");
-      bebidaActual = bebida2;
-      pesoObjetivo = PESO_MAX - pesoActual;
+      estadoActual = STATE_BEBIDA_FINALIZADA;
+      sendMessage("finished");
     }
-  }
-  else {
-    
-    digitalWrite(bebidaActual, LOW);
-    delay(500);
-  }
 }
+
+/****************************************/
+int cantMediciones = 0;
+float sumadorTemp = 0;
+float temperatura;
+/****************************************/
 
 void handleBebidaFinalizada() {
   if(cantMediciones < CANT_MEDICIONES_TEMP) {
-    sumadorTemp = getTemperatura();
+    sumadorTemp += getTemperatura();
     cantMediciones++;
   }
   else {
     temperatura = sumadorTemp / CANT_MEDICIONES_TEMP;
     cantMediciones = 0;
     sumadorTemp = 0;
-    Serial.print("TEMPERATURA DE TRAGO: ");
-    Serial.print(temperatura, 1);
+    Serial.print("[BEBIDA_FINALIZADA] Temperatura de trago: ");
+    Serial.print(temperatura);
     Serial.println("°C");
-    
-    estadoActual = ESPERANDO_INPUT;
+    estadoActual = STATE_ESPERANDO_INPUT;
+    Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
   }
 }
 
-void initBalanza(HX711 * scale, int dout, int clk, float factor) {
-  scale->begin(dout, clk);
-  scale->set_scale();
-  scale->tare();
-
-  scale->set_scale(factor);  
-}
 
 float getTemperatura() {
-  return (5.0 * analogRead(SENSOR_TEMP) * 100.0) / 1024.0;
+  return (5.0 * analogRead(PIN_SENSOR_TEMP) * 100.0) / 1024.0;
 }

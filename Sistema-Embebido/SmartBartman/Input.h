@@ -1,85 +1,192 @@
-#define FERNET 8
-#define COCA 7
-#define RX 10
-#define TX 11
+//Config pines relay
+#define PIN_RELAY_FERNET 8
+#define PIN_RELAY_COCA 7
+//Config pines bluetooth
+#define PIN_BT_RX 10
+#define PIN_BT_TX 11
+//Config celda de carga
+#define PIN_BALANZA_DOUT  A1
+#define PIN_BALANZA_CLK  A0
+#define FACTOR_CALIBRACION -1060
+//Config sensor de ultrasonido
+#define PIN_ULTRASONIDO_INT 0
+#define PIN_ULTRASONIDO_TRIG 4
+#define PIN_ULTRASONIDO_ECHO 3
+//Config sensor de temperatura
+#define PIN_SENSOR_TEMP A2
+#define CANT_MEDICIONES_TEMP 10
+//Config de valores propios del proyecto
+#define DISTANCIA_VASO_MAX 200
+#define PESO_MAX 100
+
+#define MINIMO_SERVIDO_TIEMPO 2000
+#define MINIMO_SERVIDO_GRAMOS 10
+
+//Estados posibles
+#define STATE_ESPERANDO_INPUT 20
+#define STATE_ESPERANDO_VASO 21
+#define STATE_SIRVIENDO_BEBIDA 22
+#define STATE_BEBIDA_FINALIZADA 23
 
 #include <SoftwareSerial.h>
-SoftwareSerial BT(RX, TX);
+SoftwareSerial BT(PIN_BT_RX, PIN_BT_TX);
+#include "HX711.h"
+HX711 scale;
+
+void initBalanza() {
+  scale.begin(PIN_BALANZA_DOUT, PIN_BALANZA_CLK);
+  scale.set_scale();
+  scale.tare();
+  scale.set_scale(FACTOR_CALIBRACION);
+}
 
 struct Trago {
-  int bebida1;
-  int bebida2;
-  int porcentajeBebida1;
-  int porcentajeBebida2;
+  char bebida1[21];
+  char bebida2[21];
+  int bebida1Porcentaje;
+  int bebida2Porcentaje;
 };
 
-String input;
-char buf[50];
-char caracter;
+typedef struct {
+  int pinBebida1;
+  int pinBebida2;
+  int bebida1Porcentaje;
+  int bebida2Porcentaje;
+  int pinBebidaActual;
+  float pesoObjetivo;
+} ConfigTrago;
 
-int getInput() {
-  
-  if(BT.available())
-   { 
-      caracter = BT.read();
-     if (caracter != '@') {
-      input += caracter;
+
+/****************************************/
+String bluetoothMsg;
+/****************************************/
+
+int getBluetoothMsg() {
+  if(BT.available()) {
+      char c = BT.read();
+     if (c != '@') {
+      bluetoothMsg += c;
       return 0;
      }
      else {
-      Serial.println(input);
+      Serial.print("[ESPERANDO_INPUT] ");      
+      Serial.println(bluetoothMsg);
+      Serial.print("[BYTES_READ] ");
+      Serial.println(bluetoothMsg.length());
       return 1;
      }
-    
-   } else{
-    return 0;
    }
+   return 0;
 }
 
 void sendMessage(String message) {
   BT.println(message);
 }
 
-Trago parseInput() {
-  Trago trago;
+Trago parseInput(String bluetoothMsg) {
+  char* tokens[3];
+  Trago tragoRecibido;
 
-  char aux[input.length() + 1];
-  input.toCharArray(aux, input.length()+ 1);
-
-  char *token = strtok(aux, "|");
-
-  if(strcmp(token, "FERNET") == 0) {
-    trago.bebida1 = FERNET;
-    // trago.bebida2 = COCA;
+  char _bluetoothMsg[bluetoothMsg.length() + 1];
+  bluetoothMsg.toCharArray(_bluetoothMsg, bluetoothMsg.length() + 1);
+  Serial.println("A ver que garcha pasa aca");
+  Serial.println(bluetoothMsg);
+  Serial.println(bluetoothMsg.length());
+  Serial.println(_bluetoothMsg);
+  Serial.println(sizeof(_bluetoothMsg));
+  
+  delay(1000);
+  tokens[0] = strtok(_bluetoothMsg,"|");
+  for(int i = 1; i < 3; i++) {
+      tokens[i] = strtok(NULL,"|");
   }
-  else if(strcmp(token, "COCA") == 0) {
-    trago.bebida1 = COCA;
+  Serial.println(tokens[0]);
+  Serial.println(tokens[1]);
+  Serial.println(tokens[2]);
+
+  strcpy(tragoRecibido.bebida1, tokens[0]);
+  Serial.println("DONE 1");
+  tragoRecibido.bebida1Porcentaje = atoi(tokens[1]);
+  Serial.println("DONE 2");
+  strcpy(tragoRecibido.bebida2, tokens[2]);
+  Serial.println("DONE 3");
+  tragoRecibido.bebida2Porcentaje = 100 - tragoRecibido.bebida1Porcentaje;
+
+  Serial.println("[ESPERANDO_INPUT] Mensaje parseado");
+  Serial.print("\tBebida1: ");
+  Serial.print(tragoRecibido.bebida1);
+  Serial.print(" Porcentaje: ");
+  Serial.println(tragoRecibido.bebida1Porcentaje);
+  Serial.print("\tBebida2: ");
+  Serial.print(tragoRecibido.bebida2);
+  Serial.print(" Porcentaje: ");
+  Serial.println(tragoRecibido.bebida2Porcentaje);
+
+  return tragoRecibido;
+}
+
+//Obtiene el pin que corresponde a esa bebida
+int getPin(char* bebida) {
+  if(strcmp(bebida, "FERNET") == 0)
+    return PIN_RELAY_FERNET;
+  else if(strcmp(bebida, "COCA") == 0)
+    return PIN_RELAY_COCA;
+}
+
+//Setea pines x bebida y porcentajes de cada una
+ConfigTrago getConfig(Trago trago) {
+  ConfigTrago config;
+  config.pinBebida1 = getPin(trago.bebida1);
+  config.bebida1Porcentaje = trago.bebida1Porcentaje;
+  config.pinBebida2 = getPin(trago.bebida2);
+  config.bebida2Porcentaje = trago.bebida2Porcentaje;
+  config.pesoObjetivo = PESO_MAX * trago.bebida1Porcentaje / 100;
+  config.pinBebidaActual = config.pinBebida1;
+
+  Serial.println("[ESPERANDO_INPUT] Config seteada");
+  Serial.print("\tPin Bebida1: ");
+  Serial.print(config.pinBebida1);
+  Serial.print(" Porcentaje: ");
+  Serial.println(config.bebida1Porcentaje);
+  Serial.print("\tPin Bebida2: ");
+  Serial.print(config.pinBebida2);
+  Serial.print(" Porcentaje: ");
+  Serial.println(config.bebida2Porcentaje);
+  Serial.print("\tPeso objetivo: ");
+  Serial.println(config.pesoObjetivo);
+  Serial.print("\tPin bebida actual: ");
+  Serial.println(config.pinBebidaActual);
+  
+  return config;
+}
+
+                /*UTILS*/
+/****************************************/
+void encenderRelay(int pin) {
+  digitalWrite(pin, LOW);
+}
+
+void apagarRelay(int pin) {
+  digitalWrite(pin, HIGH);
+}
+
+void log_float(String msg, float n, String unit) {
+  String now = "[" + String(millis() / 1000) + "s] ";
+  Serial.print(now);
+  Serial.print(msg);
+  Serial.print(n);
+  Serial.println(unit);
+}
+
+float getWeight() {
+  float pesoActual;
+  for(int i = 0; i < 10; i++){
+    pesoActual = scale.get_units(3);
+    if( pesoActual >= 0)
+      break;
+    else
+      pesoActual = -999;
   }
-
-  for(int i = 0; i < 2; i++) {
-    token = strtok(NULL, "|");
-    Serial.print("token: ");
-    Serial.println(token);
-    if(i == 0) {
-      trago.porcentajeBebida1 = atoi(token);
-    }
-    else if(i == 1) {
-      if(strcmp(token, "FERNET") == 0) {
-        trago.bebida2 = FERNET;
-      }
-      else if(strcmp(token, "COCA") == 0) {
-        Serial.println("entro acaaa");
-        trago.bebida2 = COCA;
-      }
-    }
-  }
-  Serial.print("trago 1:");
-  Serial.println(trago.bebida1);
-
-  Serial.print("trago 2:");
-  Serial.println(trago.bebida2);
-
-  trago.porcentajeBebida2 = 100 - trago.porcentajeBebida1;
-
-  return trago;
+  log_float("\t\tPeso actual: ", pesoActual, "g");
+  return pesoActual;
 }
