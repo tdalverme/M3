@@ -131,7 +131,12 @@ class ConnectionScreen extends PureComponent {
         connected = await BluetoothSerial.device(id).connect();
       }
       if ( connected ) {
-        this.navigation.navigate('Home')
+        if(this.navigation.getParam('tragoAuto')){
+          this.navigation.navigate('Home',{tragoAuto:true})
+        }else{
+          this.navigation.navigate('Home')
+        }
+        
       } else {
         ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
         this.setState({ processing: false, connected });

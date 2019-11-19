@@ -4,10 +4,13 @@ import {
   View,
   Text,
   ImageBackground,
+  DeviceEventEmitter ,
+  Alert
 } from 'react-native';
 import TouchID from 'react-native-touch-id';
-
+import { SensorManager } from 'NativeModules';
 import ButtonMenu from '../../utils/ButtonMenu';
+import { NavigationEvents } from 'react-navigation';
 
 const Realm = require('realm');
 
@@ -84,6 +87,32 @@ const authenticate = (navigation, page) => {
     });
 };
 
+
+const subscribeAcelerometer = (navigation )=> {
+  const sensibility = 50
+  SensorManager.startAccelerometer(100); // To start the accelerometer with a minimum delay of 100ms between events.
+  DeviceEventEmitter.addListener('Accelerometer', function (data) {
+    let aceleracion = Math.sqrt(Math.pow(data.x,2)+Math.pow(data.y,2)+Math.pow(data.z,2))
+    if(aceleracion > sensibility ){
+      SensorManager.stopAccelerometer()
+      Alert.alert("¿Querés un fernet ya?", 
+      "",
+      [
+      {text: "Ahora no" },
+      {text: "See", onPress: () => {
+        unSubscribeAcelerometer()
+        navigation.navigate('Connection',{tragoAuto:true})
+
+      }}
+      ])
+      setTimeout(()=>SensorManager.startAccelerometer(100),1000)
+    }
+  });
+}
+const unSubscribeAcelerometer = (navigation )=> {
+  DeviceEventEmitter.removeListener('Accelerometer')
+  SensorManager.stopAccelerometer();
+}
 const Menu = ({ navigation }) => {
   realm = new Realm({ path: 'UserDatabase.realm' });
   realm.write(() => {
@@ -124,6 +153,10 @@ const Menu = ({ navigation }) => {
         }}
         source={require('../../../assets/menu_principal.jpg')}
       >
+        <NavigationEvents
+          onDidFocus={()=>subscribeAcelerometer(navigation)}
+          onWillBlur={()=>unSubscribeAcelerometer(navigation)}
+        />
         <View style={{ flex: 0.7 }}>
           <View style={{ flex: 0.4, justifyContent: 'center' }}>
             <Text style={styles.title}>SmartBarman</Text>

@@ -20,28 +20,6 @@ import HomeScreen from './HomeScreen';
 import FillingGlassHOC from './FillingGlassHOC';
 const HOCComponent = FillingGlassHOC(HomeScreen);
 
-
-// realm.write(() => {
-//   var ID = this.state.input_user_id;
-//   if (
-//     realm.objects('user_details').filtered('user_id =' + input_user_id)
-//       .length > 0
-//   ) {
-//     realm.delete(
-//       realm.objects('user_details').filtered('user_id =' + input_user_id)
-//     );
-//   }
-// });
-
-// const BDDBebida = {
-//   FERNET:{
-//     graduacion: 39,
-//   },
-//   GANCIA:{
-//     graduacion: 14.8,
-//   }
-// }
-
 let realm;
 class Home extends Component {
   state = {
@@ -56,6 +34,10 @@ class Home extends Component {
     this.navigation = this.props.navigation;
     realm = new Realm({ path: 'UserDatabase.realm' });
     this.bebida = realm.objects('Drink')[0];
+
+    if(this.props.navigation.getParam('tragoAuto')){
+      this.startFilling()
+    }
 
 
     this.events.on("bluetoothDisabled", () => {
@@ -130,8 +112,7 @@ class Home extends Component {
         drink={drink}
         filling={filling}
         glassDetected={glassDetected}
-        startFilling={this.startFilling}
-        navigateMenuHome={this.navigateMenuHome} />
+        startFilling={this.startFilling}/>
     );
   }
 }
