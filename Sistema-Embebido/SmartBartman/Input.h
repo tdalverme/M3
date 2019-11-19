@@ -60,6 +60,7 @@ typedef struct {
 
 /****************************************/
 String bluetoothMsg;
+boolean msgStarted = false;
 /****************************************/
 
 void btFlush(){
@@ -72,18 +73,27 @@ int getBluetoothMsg() {
   if(BT.available()) {
     delay(50);
     char c = BT.read();
-    if (c != '@') {
-      bluetoothMsg += c;
+    
+    if(c == '#'){
+      msgStarted = true;
       return BT_MSG_PENDING;
     }
-    else {
-      Serial.print("[ESPERANDO_INPUT] ");
-      Serial.println(bluetoothMsg);
-      Serial.print("[BYTES_READ] ");
-      Serial.println(bluetoothMsg.length());
-      btFlush();
-      return BT_MSG_OK;
+    if(msgStarted) {
+      if (c != '@') {
+        bluetoothMsg += c;
+        return BT_MSG_PENDING;
+      }
+      else {
+        Serial.print("[ESPERANDO_INPUT] ");
+        Serial.println(bluetoothMsg);
+        Serial.print("[BYTES_READ] ");
+        Serial.println(bluetoothMsg.length());
+        btFlush();
+        msgStarted = false;
+        return BT_MSG_OK;
+      }
     }
+    return BT_MSG_PENDING;
   }
   return BT_MSG_NOT_AVAILABLE;
 }
