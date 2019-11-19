@@ -60,29 +60,47 @@ typedef struct {
 
 /****************************************/
 String bluetoothMsg;
+boolean msgStarted = false;
 /****************************************/
+
+void btFlush(){
+  while(BT.available() > 0) {
+    char t = BT.read();
+  }
+}  
 
 int getBluetoothMsg() {
   if(BT.available()) {
     delay(50);
     char c = BT.read();
-    if (c != '@') {
-      bluetoothMsg += c;
+    
+    if(c == '#'){
+      msgStarted = true;
       return BT_MSG_PENDING;
     }
-    else {
-      Serial.print("[ESPERANDO_INPUT] ");
-      Serial.println(bluetoothMsg);
-      Serial.print("[BYTES_READ] ");
-      Serial.println(bluetoothMsg.length());
-      return BT_MSG_OK;
+    if(msgStarted) {
+      if (c != '@') {
+        bluetoothMsg += c;
+        return BT_MSG_PENDING;
+      }
+      else {
+        Serial.print("[ESPERANDO_INPUT] ");
+        Serial.println(bluetoothMsg);
+        Serial.print("[BYTES_READ] ");
+        Serial.println(bluetoothMsg.length());
+        btFlush();
+        msgStarted = false;
+        return BT_MSG_OK;
+      }
     }
+    return BT_MSG_PENDING;
   }
   return BT_MSG_NOT_AVAILABLE;
 }
 
 void sendMessage(String message) {
   BT.println(message);
+  btFlush();
 }
 
 Trago parseInput(String bluetoothMsg) {
@@ -91,27 +109,15 @@ Trago parseInput(String bluetoothMsg) {
 
   char _bluetoothMsg[bluetoothMsg.length() + 1];
   bluetoothMsg.toCharArray(_bluetoothMsg, bluetoothMsg.length() + 1);
-  Serial.println("A ver que garcha pasa aca");
-  Serial.println(bluetoothMsg);
-  Serial.println(bluetoothMsg.length());
-  Serial.println(_bluetoothMsg);
-  Serial.println(sizeof(_bluetoothMsg));
-
-  delay(1000);
+  
   tokens[0] = strtok(_bluetoothMsg,"|");
   for(int i = 1; i < 3; i++) {
     tokens[i] = strtok(NULL,"|");
   }
-  Serial.println(tokens[0]);
-  Serial.println(tokens[1]);
-  Serial.println(tokens[2]);
-
+  
   strcpy(tragoRecibido.bebida1, tokens[0]);
-  Serial.println("DONE 1");
   tragoRecibido.bebida1Porcentaje = atoi(tokens[1]);
-  Serial.println("DONE 2");
   strcpy(tragoRecibido.bebida2, tokens[2]);
-  Serial.println("DONE 3");
   tragoRecibido.bebida2Porcentaje = 100 - tragoRecibido.bebida1Porcentaje;
 
   Serial.println("[ESPERANDO_INPUT] Mensaje parseado");
