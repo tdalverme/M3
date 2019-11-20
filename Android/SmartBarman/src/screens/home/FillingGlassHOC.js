@@ -3,8 +3,8 @@ import {
   View, StyleSheet, ActivityIndicator, Text, Image,
 } from 'react-native';
 
-const coca_image = require('../../../'+'assets/coca-cola.png');
-const fernet_image = require('../../../'+'assets/fernet_2.jpg');
+const coca_image = require('../../../' + 'assets/coca-cola.png');
+const fernet_image = require('../../../' + 'assets/fernet_2.jpg');
 
 const Filling = ({ drink }) => (
   <View style={{
@@ -16,7 +16,11 @@ const Filling = ({ drink }) => (
         padding: 20, textAlign: 'center', fontSize: 18, color: 'white',
       }}
       >
-        Llenando el vaso con {drink} ...
+        Llenando el vaso con
+        {' '}
+        {drink}
+        {' '}
+...
       </Text>
     </View>
 
@@ -34,13 +38,13 @@ const Filling = ({ drink }) => (
 );
 
 export default (Comp) => ({
-  drink, filling, children, ...props
+  drink, filling, glassDetected, children, ...props
 }) => (
   <View style={{ flex: 1 }}>
     <Comp {...props}>
       {children}
     </Comp>
-    {filling
+    {filling && glassDetected
         && (
         <View
           style={[
