@@ -15,13 +15,18 @@
 #define PIN_BALANZA_CLK  A0
 #define FACTOR_CALIBRACION -1060
 //Config sensor de ultrasonido
-#define PIN_ULTRASONIDO_INT 0
 #define PIN_ULTRASONIDO_TRIG 4
 #define PIN_ULTRASONIDO_ECHO 3
-#define DISTANCIA_VASO_MAX 200
+#define DISTANCIA_VASO_MAX 20
 //Config sensor de temperatura
 #define PIN_SENSOR_TEMP A2
 #define CANT_MEDICIONES_TEMP 10
+//Config buzzer
+#define PIN_BUZZER 12
+//Config leds
+#define PIN_LED_1 5
+#define PIN_LED_2 6
+#define PIN_LED_3 9
 
 //Estados posibles
 #define STATE_ESPERANDO_INPUT 20

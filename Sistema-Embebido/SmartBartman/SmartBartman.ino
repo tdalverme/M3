@@ -11,6 +11,8 @@ void setup() {
   pinMode(PIN_RELAY_FERNET, OUTPUT);
   pinMode(PIN_RELAY_COCA, OUTPUT);
 
+  pinMode(PIN_BUZZER, OUTPUT);
+
   pinMode(PIN_ULTRASONIDO_TRIG, OUTPUT); // Sets the trigPin as an Output
   pinMode(PIN_ULTRASONIDO_ECHO, INPUT); // Sets the echoPin as an Input
 
@@ -18,6 +20,8 @@ void setup() {
   apagarRelay(PIN_RELAY_COCA);
 
   estadoActual = STATE_ESPERANDO_INPUT;
+
+  encenderLed1();
 
   Serial.println("[SETUP] Setup terminado");
   Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
@@ -58,6 +62,7 @@ void handleEsperandoInput() {
     bluetoothMsg = "";
     config = getConfig(tragoSeleccionado);
     estadoActual = STATE_ESPERANDO_VASO;
+    encenderLed2();
   }
 }
 
@@ -90,40 +95,57 @@ boolean finished;
 //60g ~= 30g + 15g + 10g +10g
 /****************************************/
 
+
+boolean measureGlassPosition() {
+  // Clears the trigPin
+  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
+  delayMicroseconds(2);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(PIN_ULTRASONIDO_TRIG, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  long duration = pulseIn(PIN_ULTRASONIDO_ECHO, HIGH);
+  // Calculating the distance
+  long distance = duration * 0.034/2;
+  Serial.print("[ESPERANDO_VASO] Distance: ");
+  Serial.println(distance);
+
+  return (distance <= DISTANCIA_VASO_MAX);
+}
+
 void handleEsperandoVaso() {
-  
-  Serial.println("[ESPERANDO_VASO] Not implemented yet");
-  estadoActual = STATE_SIRVIENDO_BEBIDA;
-  Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
-
-  primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
-  segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
-  primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
-  segundoIncremental = (int) (segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
-  incremental = primerIncremental;
-  finished = false;
-
-  Serial.print("\tPrimer tope: ");
-  Serial.print(primerTopeEnGramos);
-  Serial.print("\tPrimer incremental: ");
-  Serial.println(primerIncremental);
-  Serial.print("\tSegundo tope: ");
-  Serial.print(segundoTopeEnGramos);
-  Serial.print("\tSegundo incremental: ");
-  Serial.println(segundoIncremental);
-
-  Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
-  Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
-  previousMillis = millis();
 
   if(measureGlassPosition()) {
+    Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
+
+    primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
+    segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
+    primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+    segundoIncremental = (int) (segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+    incremental = primerIncremental;
+    finished = false;
+  
+    Serial.print("\tPrimer tope: ");
+    Serial.print(primerTopeEnGramos);
+    Serial.print("\tPrimer incremental: ");
+    Serial.println(primerIncremental);
+    Serial.print("\tSegundo tope: ");
+    Serial.print(segundoTopeEnGramos);
+    Serial.print("\tSegundo incremental: ");
+    Serial.println(segundoIncremental);
+  
+    Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
+    Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
     sendMessage("detected|true");
     sendMessage("change|FERNET");
     encenderRelay(config.pinBebidaActual);  
     estadoActual = STATE_SIRVIENDO_BEBIDA;
-  } else {
+    encenderLed3();
+    previousMillis = millis();
+  }
+  else {
     sendMessage("detected|false");
-    estadoActual = STATE_SIRVIENDO_BEBIDA;
   }
   
 }
@@ -142,28 +164,8 @@ boolean done2 = false;
 float pesoActual;
 /****************************************/
 
-boolean measureGlassPosition() {
-  long duration;
-  int distance;
-  // Clears the trigPin
-  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
-  delayMicroseconds(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(PIN_ULTRASONIDO_TRIG, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(PIN_ULTRASONIDO_ECHO, HIGH);
-  // Calculating the distance
-  distance= duration * 0.034/2;
-  Serial.print("Distance: ");
-  Serial.println(distance);
-
-  return (distance > 100);
-}
-
 void handleSirviendoBebida() {
-    if(!finished && measureGlassPosition()) {
+    if(!finished) {
 
       if(millisPassed(incremental) && !done1) {
         apagarRelay(config.pinBebidaActual);
@@ -197,6 +199,9 @@ void handleSirviendoBebida() {
     else {
       estadoActual = STATE_BEBIDA_FINALIZADA;
       sendMessage("finished");
+      digitalWrite(PIN_BUZZER, HIGH);
+      delay(1000);
+      digitalWrite(PIN_BUZZER, LOW);
     }
 }
 
@@ -219,11 +224,29 @@ void handleBebidaFinalizada() {
     Serial.print(temperatura);
     Serial.println("°C");
     estadoActual = STATE_ESPERANDO_INPUT;
+    encenderLed1();
     Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
   }
 }
 
-
 float getTemperatura() {
   return (5.0 * analogRead(PIN_SENSOR_TEMP) * 100.0) / 1024.0;
+}
+
+void encenderLed1() {
+  analogWrite(PIN_LED_1, 0);
+  analogWrite(PIN_LED_2, 255);
+  analogWrite(PIN_LED_3, 255);
+}
+
+void encenderLed2() {
+  analogWrite(PIN_LED_1, 255);
+  analogWrite(PIN_LED_2, 0);
+  analogWrite(PIN_LED_3, 255);
+}
+
+void encenderLed3() {
+  analogWrite(PIN_LED_1, 255);
+  analogWrite(PIN_LED_2, 255);
+  analogWrite(PIN_LED_3, 0);
 }
