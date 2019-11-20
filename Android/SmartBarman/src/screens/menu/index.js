@@ -89,7 +89,7 @@ const authenticate = (navigation, page) => {
 
 
 const subscribeAcelerometer = (navigation )=> {
-  const sensibility = 50
+  const sensibility = 20
   SensorManager.startAccelerometer(100); // To start the accelerometer with a minimum delay of 100ms between events.
   DeviceEventEmitter.addListener('Accelerometer', function (data) {
     let aceleracion = Math.sqrt(Math.pow(data.x,2)+Math.pow(data.y,2)+Math.pow(data.z,2))
@@ -164,7 +164,7 @@ const Menu = ({ navigation }) => {
           <View style={{ flex: 0.6, justifyContent: 'flex-start' }}>
             <ButtonMenu
               title="Preparar un trago"
-              onPress={() => { authenticate(navigation, 'Connection'); }}
+              onPress={() => { authenticate(navigation, 'Home'); }}
             />
 
             <ButtonMenu

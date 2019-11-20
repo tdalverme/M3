@@ -106,7 +106,7 @@ class ConnectionScreen extends PureComponent {
       ]);
 
       if(isEnabled) {
-        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05')[0];
+        const arduinoBluetooth = devices.filter((device) => device.name === 'HC-05 ')[0];
         if(arduinoBluetooth) {
           this.setState({device: arduinoBluetooth});
           this.connect(arduinoBluetooth.id);
