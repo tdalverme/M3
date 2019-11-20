@@ -65,14 +65,6 @@ export default class Records extends PureComponent {
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
     //Auto Genera lote de prueba
-    realm.write(() => {  
-      realm.create('User',{ 
-        username: 'Axel',
-        height: 170,
-        weight: 70
-      });
-    });
-
     let userConnect = realm.objects('User')[0];let a;let b;
     let tragos = realm.objects('Ingested').filter(aux=>
       compararFechas(aux)

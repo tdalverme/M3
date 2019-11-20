@@ -164,12 +164,16 @@ const Menu = ({ navigation }) => {
           <View style={{ flex: 0.6, justifyContent: 'flex-start' }}>
             <ButtonMenu
               title="Preparar un trago"
-              onPress={() => { authenticate(navigation, 'Home'); }}
+              onPress={() => { navigation.navigate('Home'); }}
             />
 
             <ButtonMenu
               title="Ver mi estado alcohólico"
-              onPress={() => { authenticate(navigation, 'Records'); }}
+              onPress={() => { navigation.navigate('Records') }}
+            />
+            <ButtonMenu
+              title="Editar mis Datos"
+              onPress={() => { navigation.navigate('Register',{editarDatos}); }}
             />
 
           </View>
