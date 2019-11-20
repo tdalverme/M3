@@ -136,7 +136,7 @@ class ConnectionScreen extends PureComponent {
         }else{
           this.navigation.navigate('Home')
         }
-        
+
       } else {
         ToastAndroid.show('No se pudo conectar a SmartBarman.', ToastAndroid.SHORT);
         this.setState({ processing: false, connected });
@@ -187,7 +187,7 @@ class ConnectionScreen extends PureComponent {
                 <ActivityIndicator color="#efb810" size="large" />
               }
 
-              <ButtonMenu title={processing?'Recargar':'Conectar'}
+              <ButtonMenu title={processing ? 'Reintentar' : 'Conectar'}
               onPress={() => this.findDevices()}/>
 
           </View>

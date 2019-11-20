@@ -98,7 +98,7 @@ class Home extends Component {
         this.setState({drink: data});
         break;
       case 'detected':
-        this.setState({glassDetected: data === 'true'});
+        this.setState({glassDetected: data === 'true', filling: true});
         break;
       case 'filling':
         this.setState({filling: data === 'true'});
@@ -120,6 +120,7 @@ class Home extends Component {
     this.navigation.navigate('FeedBack',{bebida:this.bebida.name})
   }
   startFilling = async () => {
+
     this.setState({filling: true, drink: this.bebida.ingredient1,porcentaje:30}, async () => {
       await BluetoothSerial.clear();
       await BluetoothSerial.write('#' + this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
