@@ -6,40 +6,63 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   ToastAndroid,
-  View
+  View,
+  KeyboardAvoidingView
 } from 'react-native';
+import ButtonMenu from '../../utils/ButtonMenu'
+import InputBarman from '../../utils/InputBarman'
+import TouchID from 'react-native-touch-id';
+import { NavigationEvents } from 'react-navigation';
 
 const Realm = require('realm');
 
+const config = {
+  title: 'Autenticación requerida', // Android
+  imageColor: '#efb810', // Android
+  imageErrorColor: '#D8000C', // Android
+  sensorDescription: 'Posicione su huella en el lector', // Android
+  sensorErrorDescription: 'No autorizado', // Android
+  cancelText: 'Cancelar', // Android
+  unifiedErrors: true, // use unified error messages (default false)
+};
+
+
+
+
+
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'white',
-    padding: 10,
+    flex:1,
+    backgroundColor:'#393D42',
+    justifyContent: 'flex-start',
+  },
+  text:{
+    fontSize: 20,
+    color: 'white',
+    textAlign: 'center',
   },
   title: {
-    fontSize: 22,
-    color: 'black',
+    fontSize: 26,
+    color: 'white',
     textAlign: 'center',
   },
   section: {
-    flex: 0.2,
-    margin: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
+    display:'flex',
+    flexWrap:'nowrap',
+    justifyContent:'space-between',
+    alignItems:'center',
+    // margin: 30,
     flexDirection: 'row',
   },
   label: {
     flex: 0.5,
-    color: 'black',
+    color: 'white',
+    textAlign:'center',
     fontSize: 18,
   },
   picker: {
     flex: 0.5,
     height: 40,
-    width: '100%',
     alignSelf: 'center',
     fontSize: 18,
   },
@@ -48,25 +71,74 @@ const styles = StyleSheet.create({
 let realm;
 
 export default class RegisterScreen extends PureComponent {
-  
+ static navigationOptions = {
+    //quitamos el botón de atrás
+    headerLeft:(
+      <View >
+       </View>),
+  };
   state = {
     username: '',
     height: '',
     weight: '',
     loading: true,
+    editar: true,
+    autoLogin: false
   };
 
   constructor(props) {
     super(props);
+    this.navigation = this.props.navigation
     realm = new Realm({ path: 'UserDatabase.realm' });
 
   }
 
-  async componentDidMount() {
-    const { navigation } = this.props;
+  authenticate = (navigation, page,actualizar) => {
+    TouchID.isSupported(config)
+      .then((supported) => {
+        if (supported) {
+          TouchID.authenticate('Es necesario autenticarse para continuar', config)
+            .then((success) => {
+              if(actualizar){
+                actualizar();
+              }
+              this.setState({loading:true})
+              navigation.navigate(page);
+            })
+            .catch(() => {
+              ToastAndroid.show('No detectamos tu huella', ToastAndroid.SHORT);
+              this.setState({loading:false})
+            });
+        } else {
+          navigation.navigate(page);
+        }
+      })
+      .catch((error) => {
+        // Failure code
+        console.log(error);
+        navigation.navigate(page);
+      });
+  };
+
+  iniciarPantalla = async (navigation)  =>{
+    this.setState({
+      loading: true,
+      editar:true
+    })
     const user = realm.objects('User')[0];
-    if(user && user.username && user.weight && user.height) {
-      navigation.navigate('Home');
+    if(this.props.navigation.getParam('editarDatos')) {
+      //Vengo de la pantalla Menú para editar datos ya cargados
+      this.setState({
+                    username:user.username,
+                    weight:parseFloat(user.weight),
+                    height:parseFloat(user.height),
+                    loading:false,
+                    autoLogin:true,
+                    })
+    }else if(user && user.username && user.weight && user.height ) {
+      this.setState({loading: false,editar:false});
+      this.authenticate(navigation, 'Menu')  
+      
     } else {
       this.setState({loading: false});
     }
@@ -84,10 +156,22 @@ export default class RegisterScreen extends PureComponent {
       height: parseFloat(height),
       weight: parseFloat(weight)
     };
-    realm.write(() => {
-      realm.create('User', obj);
-    });
-  }
+
+    let usuario = realm.objects('User');
+    if(usuario.length == 0){
+      //Todavía no existe ningun usuario(creo)
+      realm.write(() => {
+        realm.create('User', obj);
+      });
+    }else{
+      //Si existe un usuario (Actualizo)
+      realm.write(() => {
+        usuario[0].username  = obj.username
+        usuario[0].weight  = obj.weight
+        usuario[0].height  = obj.height
+      });
+    }
+ }
 
   validInfo = () => {
     const {username, height, weight} = this.state;
@@ -97,63 +181,85 @@ export default class RegisterScreen extends PureComponent {
   submit = () => {
     const { navigation } = this.props;
     if(this.validInfo()) {
-      this.saveInfo();
-      navigation.navigate('Home');
+      
+      this.authenticate(navigation, 'Menu',this.saveInfo)
     } else {
       ToastAndroid.show('Debe completar todos los campos para continuar', ToastAndroid.SHORT);
     }
   }
 
   render() {
-    const { username, height, weight, loading } = this.state;
-    if(loading) {
-      return <ActivityIndicator size="large" color="#0000ff" />;
-    }
-    return (
-        <View style={styles.container}>
-          <View style={{ flex: 0.2 }}>
-            <Text style={styles.title}>Bienvenido!</Text>
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.label}>Nombre</Text>
-            <TextInput
-              underlineColorAndroid={'grey'}
-              style={styles.picker}
-              onChangeText={value => this.setState({username: value})}
-              value={username}
-            />
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.label}>Altura</Text>
-            <TextInput
-              underlineColorAndroid={'grey'}
-              style={styles.picker}
-              keyboardType={'numeric'}
-              onChangeText={value => this.setState({height: value})}
-              value={height}
-            />
-          </View>
-          <View style={styles.section}>
-            <Text style={styles.label}>Peso</Text>
-            <TextInput
-              underlineColorAndroid={'grey'}
-              style={styles.picker}
-              keyboardType={'numeric'}
-              onChangeText={value => this.setState({weight: value})}
-              value={weight}
-            />
+    const { username, height, weight, loading,editar,autoLogin } = this.state;
+
+    return(
+      <View style={styles.container}>
+        <NavigationEvents
+          onDidFocus={()=>this.iniciarPantalla(this.navigation)}
+        />
+          {
+            loading? (
+            // se esta cargando la pagina
+              <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
+                  <ActivityIndicator color = "#efb810" size="large" color="#0000ff" />
+                  { // Se ingresa automáticamente y se ingresa mal la huella
+                    this.showButton(autoLogin)
+                  }
+
+                  
+                  
+              </View>
+      
+            ):( !editar?
+              // el usuario ya tenia sus datos cargados y tenía que entrar directo
+              // Sin embargo, fallo o puso cancelar. Reintentar:
+              <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
+              <ButtonMenu title={'Continuar'}
+              onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
+              </View>
+              :  
+              //Pantalla de carga y/o edición de datos
+              <View style={{flex:1}}>
+              <View style={{ flex: 0.2,justifyContent:'center'}}>
+                <Text style={styles.title}>¡Bienvenido!</Text>
+              </View>
+              <View style ={{flex:0.6,justifyContent:'space-between'}}>
+                  <InputBarman 
+                      title={'Nombre'} 
+                      onChangeText={value => this.setState({username: value})}
+                      value={username}
+                      keyboardType={'default'}
+                  />
+                  <InputBarman 
+                      title={'Altura'} 
+                      onChangeText={value => this.setState({height: parseFloat(value)})}
+                      value={height}
+                      keyboardType={'numeric'}
+                  />
+                  <InputBarman
+                      title={'Peso'} 
+                      onChangeText={value => this.setState({weight: parseFloat(value)})}
+                      value={weight}
+                      keyboardType={'numeric'}
+                  />
+              
+                <Text style={{alignSelf: 'center', textAlign: 'center', fontSize: 14, fontStyle: 'italic',color:'white',padding:5}}>
+                  Necesitamos su altura y peso para realizar cálculos</Text>
+              </View>
+            
+              <View style={{flex:0.3,justifyContent:'center',alignItems:'center'}}>
+                  <ButtonMenu title={'Continuar'}
+                  onPress={() =>  this.submit()}/>
+              </View>
+              </View>
+            )
+          }
           </View>
 
-          <View style={{ flex: 0.1 }}>
-            <Text style={{alignSelf: 'center', textAlign: 'center', fontSize: 14, fontStyle: 'italic'}}>Necesitamos su altura y peso para realizar cálculos</Text>
-          </View>
-          <TouchableOpacity
-            style={{backgroundColor: 'green', margin: 20}}
-            onPress={() => this.submit()}>
-            <Text style={{color: 'white', padding: 10}}> CONTINUAR </Text>
-          </TouchableOpacity>
-        </View>
+    )
+  }
 
-    );
+  showButton(autoLogin) {
+    return autoLogin ? (
+          <ButtonMenu title={'Ingresar Huella'} onPress={() => this.authenticate(this.props.navigation, 'Menu')} />) : (<View></View>);
   }
 }
