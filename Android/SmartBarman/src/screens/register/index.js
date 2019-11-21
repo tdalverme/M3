@@ -82,7 +82,8 @@ export default class RegisterScreen extends PureComponent {
     height: '',
     weight: '',
     loading: true,
-    editar: true
+    editar: true,
+    autoLogin: false
   };
 
   constructor(props) {
@@ -132,6 +133,7 @@ export default class RegisterScreen extends PureComponent {
                     weight:parseFloat(user.weight),
                     height:parseFloat(user.height),
                     loading:false,
+                    autoLogin:true,
                     })
     }else if(user && user.username && user.weight && user.height ) {
       this.setState({loading: false,editar:false});
@@ -187,7 +189,7 @@ export default class RegisterScreen extends PureComponent {
   }
 
   render() {
-    const { username, height, weight, loading,editar } = this.state;
+    const { username, height, weight, loading,editar,autoLogin } = this.state;
 
     return(
       <View style={styles.container}>
@@ -195,59 +197,69 @@ export default class RegisterScreen extends PureComponent {
           onDidFocus={()=>this.iniciarPantalla(this.navigation)}
         />
           {
-          loading? 
-          // se esta cargando la pagina
-            <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
-                <ActivityIndicator color = "#efb810" size="large" color="#0000ff" />
-                <ButtonMenu title={'Ingresar Huella'}
-                onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
-            </View>
-    
-          : !editar?
-            // el usuario ya tenia sus datos cargados y tenía que entrar directo
-            // Sin embargo, fallo o puso cancelar. Reintentar:
-            <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
-            <ButtonMenu title={'Continuar'}
-            onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
-            </View>
-            :  
-            //Pantalla de carga y/o edición de datos
-            <View style={{flex:1}}>
-            <View style={{ flex: 0.2,justifyContent:'center'}}>
-              <Text style={styles.title}>¡Bienvenido!</Text>
-            </View>
-            <View style ={{flex:0.6,justifyContent:'space-between'}}>
-                <InputBarman 
-                    title={'Nombre'} 
-                    onChangeText={value => this.setState({username: value})}
-                    value={username}
-                    keyboardType={'default'}
-                />
-                <InputBarman 
-                    title={'Altura'} 
-                    onChangeText={value => this.setState({height: parseFloat(value)})}
-                    value={height}
-                    keyboardType={'numeric'}
-                />
-                <InputBarman
-                    title={'Peso'} 
-                    onChangeText={value => this.setState({weight: parseFloat(value)})}
-                    value={weight}
-                    keyboardType={'numeric'}
-                />
+            loading? (
+            // se esta cargando la pagina
+              <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
+                  <ActivityIndicator color = "#efb810" size="large" color="#0000ff" />
+                  { // Se ingresa automáticamente y se ingresa mal la huella
+                    this.showButton(autoLogin)
+                  }
+
+                  
+                  
+              </View>
+      
+            ):( !editar?
+              // el usuario ya tenia sus datos cargados y tenía que entrar directo
+              // Sin embargo, fallo o puso cancelar. Reintentar:
+              <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
+              <ButtonMenu title={'Continuar'}
+              onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
+              </View>
+              :  
+              //Pantalla de carga y/o edición de datos
+              <View style={{flex:1}}>
+              <View style={{ flex: 0.2,justifyContent:'center'}}>
+                <Text style={styles.title}>¡Bienvenido!</Text>
+              </View>
+              <View style ={{flex:0.6,justifyContent:'space-between'}}>
+                  <InputBarman 
+                      title={'Nombre'} 
+                      onChangeText={value => this.setState({username: value})}
+                      value={username}
+                      keyboardType={'default'}
+                  />
+                  <InputBarman 
+                      title={'Altura'} 
+                      onChangeText={value => this.setState({height: parseFloat(value)})}
+                      value={height}
+                      keyboardType={'numeric'}
+                  />
+                  <InputBarman
+                      title={'Peso'} 
+                      onChangeText={value => this.setState({weight: parseFloat(value)})}
+                      value={weight}
+                      keyboardType={'numeric'}
+                  />
+              
+                <Text style={{alignSelf: 'center', textAlign: 'center', fontSize: 14, fontStyle: 'italic',color:'white',padding:5}}>
+                  Necesitamos su altura y peso para realizar cálculos</Text>
+              </View>
             
-              <Text style={{alignSelf: 'center', textAlign: 'center', fontSize: 14, fontStyle: 'italic',color:'white',padding:5}}>
-                Necesitamos su altura y peso para realizar cálculos</Text>
-            </View>
-           
-            <View style={{flex:0.3,justifyContent:'center',alignItems:'center'}}>
-                <ButtonMenu title={'Continuar'}
-                onPress={() =>  this.submit()}/>
-            </View>
-            </View>
+              <View style={{flex:0.3,justifyContent:'center',alignItems:'center'}}>
+                  <ButtonMenu title={'Continuar'}
+                  onPress={() =>  this.submit()}/>
+              </View>
+              </View>
+            )
           }
           </View>
 
     )
+  }
+
+  showButton(autoLogin) {
+    return autoLogin ? (
+          <ButtonMenu title={'Ingresar Huella'} onPress={() => this.authenticate(this.props.navigation, 'Menu')} />) : (<View></View>);
   }
 }
