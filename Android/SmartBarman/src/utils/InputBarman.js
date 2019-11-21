@@ -36,6 +36,7 @@ const styles = StyleSheet.create({
       }
 })
 export default({onChangeText,value,title,keyboardType}) => {
+    
     return (
     <View style={styles.section}>
       <View style={styles.colums}>
@@ -47,7 +48,7 @@ export default({onChangeText,value,title,keyboardType}) => {
             style={{...styles.picker,...styles.label}}
             onChangeText={ onChangeText }
             keyboardType={keyboardType?keyboardType:'default'}
-            value={value}
+            value={keyboardType==='default'?value:isNaN(value.toString())?'':value.toString()}
         />
 
         </View>

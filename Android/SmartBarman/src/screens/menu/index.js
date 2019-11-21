@@ -173,7 +173,7 @@ const Menu = ({ navigation }) => {
             />
             <ButtonMenu
               title="Editar mis Datos"
-              onPress={() => { navigation.navigate('Register',{editarDatos}); }}
+              onPress={() => { navigation.navigate('Register',{editarDatos:true}); }}
             />
 
           </View>
