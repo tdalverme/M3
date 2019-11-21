@@ -1,6 +1,5 @@
 import React from 'react';
 import Navigation from './src/Navigation';
-import { NavigationEvents } from 'react-navigation';
 
 const Realm = require('realm');
 

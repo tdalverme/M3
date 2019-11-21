@@ -10,7 +10,6 @@ import {
   TouchableHighlight
 } from 'react-native';
 import ButtonMenu from '../../utils/ButtonMenu'
-import ButtonSlider from '../../utils/ButtonSlider'
 
 const Realm = require('realm');
 
@@ -57,7 +56,8 @@ export default class Records extends PureComponent {
   state = {
     loading: true,
     graduacionAlc : null,
-    estadoAlc : null
+    estadoAlc : null,
+    name: null
   };
 
   
@@ -65,7 +65,7 @@ export default class Records extends PureComponent {
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
     //Auto Genera lote de prueba
-    let userConnect = realm.objects('User')[0];let a;let b;
+    let userConnect = realm.objects('User')[0];
     let tragos = realm.objects('Ingested').filter(aux=>
       compararFechas(aux)
     )
@@ -75,16 +75,16 @@ export default class Records extends PureComponent {
     });
     graduacionAlc /= userConnect.weight
     if(graduacionAlc == limitSobrio){
-      this.setState({graduacionAlc,estadoAlc:'estadoSobrio',loading:false})
+      this.setState({name:userConnect.username,graduacionAlc,estadoAlc:'estadoSobrio',loading:false})
     }else if(graduacionAlc < limitAuto){
-      this.setState({graduacionAlc,estadoAlc:'estadoModerado',loading:false})
+      this.setState({name:userConnect.username,graduacionAlc,estadoAlc:'estadoModerado',loading:false})
     }else{
-      this.setState({graduacionAlc,estadoAlc:'estadoEbrio',loading:false})
+      this.setState({name:userConnect.username,graduacionAlc,estadoAlc:'estadoEbrio',loading:false})
     }
   }
 
   render() {
-    const { loading, graduacionAlc, estadoAlc } = this.state;
+    const { name, loading, graduacionAlc, estadoAlc } = this.state;
     
     if(estadoAlc !== null){
       imagen = propEstado[estadoAlc].imagen;
@@ -107,7 +107,7 @@ export default class Records extends PureComponent {
           <View style={{flex:0.15,justifyContent:'space-around'}}>  
           <Text style={{color:'black',fontSize:26,fontWeight:'bold',textAlign:'center'}}>{propEstado[estadoAlc].estado}</Text>
             <View>
-              <Text style={styles.text2}>Tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
+              <Text style={styles.text2}>{name} tu nivel de alcohol en sangre es de {parseFloat(graduacionAlc).toFixed(2)} G/l</Text>
               
               <Text style={styles.text2}>{propEstado[estadoAlc].mensaje}</Text>
             </View>
@@ -122,7 +122,7 @@ export default class Records extends PureComponent {
             {
               graduacionAlc != 0 &&
               <ButtonMenu title="Ver Detalle"  
-              onPress={({navigation})=>{this.props.navigation.navigate('RecordsDetail');}}/>
+              onPress={()=>{this.props.navigation.navigate('RecordsDetail');}}/>
               }
               
             </View>

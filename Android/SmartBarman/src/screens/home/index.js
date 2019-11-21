@@ -66,7 +66,7 @@ class Home extends Component {
 
     SensorManager.startLightSensor(100);
     DeviceEventEmitter.addListener('LightSensor', function (data) {
-      if(data.light < 100){
+      if(data.light < 50){
         actualizarLuz('LED_ON')
         SensorManager.stopLightSensor();
         DeviceEventEmitter.removeListener('LightSensor');

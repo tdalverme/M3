@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
 let realm;
 
 export default class RegisterScreen extends PureComponent {
-  static navigationOptions = {
+ static navigationOptions = {
     //quitamos el botón de atrás
     headerLeft:(
       <View >
@@ -82,7 +82,6 @@ export default class RegisterScreen extends PureComponent {
     height: '',
     weight: '',
     loading: true,
-    huellaFail:false,
     editar: true
   };
 
@@ -102,11 +101,12 @@ export default class RegisterScreen extends PureComponent {
               if(actualizar){
                 actualizar();
               }
-              this.setState()
+              this.setState({loading:true})
               navigation.navigate(page);
             })
             .catch(() => {
-              this.setState({huellaFail:true,loading:false})
+              ToastAndroid.show('No detectamos tu huella', ToastAndroid.SHORT);
+              this.setState({loading:false})
             });
         } else {
           navigation.navigate(page);
@@ -122,7 +122,6 @@ export default class RegisterScreen extends PureComponent {
   iniciarPantalla = async (navigation)  =>{
     this.setState({
       loading: true,
-      huellaFail:false,
       editar:true
     })
     const user = realm.objects('User')[0];
@@ -188,7 +187,7 @@ export default class RegisterScreen extends PureComponent {
   }
 
   render() {
-    const { username, height, weight, loading,huellaFail,editar } = this.state;
+    const { username, height, weight, loading,editar } = this.state;
 
     return(
       <View style={styles.container}>
@@ -204,14 +203,14 @@ export default class RegisterScreen extends PureComponent {
                 onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
             </View>
     
-          : huellaFail && !editar?
+          : !editar?
             // el usuario ya tenia sus datos cargados y tenía que entrar directo
             // Sin embargo, fallo o puso cancelar. Reintentar:
             <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
-            <ButtonMenu title={'Ingresar Huella'}
+            <ButtonMenu title={'Continuar'}
             onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
             </View>
-            : 
+            :  
             //Pantalla de carga y/o edición de datos
             <View style={{flex:1}}>
             <View style={{ flex: 0.2,justifyContent:'center'}}>
