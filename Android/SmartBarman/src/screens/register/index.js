@@ -72,7 +72,7 @@ let realm;
 
 export default class RegisterScreen extends PureComponent {
  static navigationOptions = {
-    //quitamos el botón de atrás
+    //quitamos el botón de volver atrás
     headerLeft:(
       <View >
        </View>),
@@ -102,7 +102,10 @@ export default class RegisterScreen extends PureComponent {
               if(actualizar){
                 actualizar();
               }
-              this.setState({loading:true})
+              //me voy de la pantalla guardo el estado por si vuelvo
+              // si vuelvo, tiene que aparecer cargando y el autoLogin 
+              //deja de aplicar
+              this.setState({loading:true,autoLogin:false})
               navigation.navigate(page);
             })
             .catch(() => {
@@ -119,6 +122,7 @@ export default class RegisterScreen extends PureComponent {
         navigation.navigate(page);
       });
   };
+  
 
   iniciarPantalla = async (navigation)  =>{
     this.setState({
@@ -133,13 +137,14 @@ export default class RegisterScreen extends PureComponent {
                     weight:parseFloat(user.weight),
                     height:parseFloat(user.height),
                     loading:false,
-                    autoLogin:true,
                     })
     }else if(user && user.username && user.weight && user.height ) {
-      this.setState({loading: false,editar:false});
+      //inicio automático
+      this.setState({loading: false,editar:false,autoLogin:true});
       this.authenticate(navigation, 'Menu')  
       
     } else {
+      //ingreso por primera vez
       this.setState({loading: false});
     }
   }
@@ -187,6 +192,8 @@ export default class RegisterScreen extends PureComponent {
       ToastAndroid.show('Debe completar todos los campos para continuar', ToastAndroid.SHORT);
     }
   }
+  // Dejo la pantalla en estado cargando por si vuelvo desde el menú
+  finalizarPantalla = ()=> this.setState({loading:true,edita:true})
 
   render() {
     const { username, height, weight, loading,editar,autoLogin } = this.state;
@@ -195,12 +202,13 @@ export default class RegisterScreen extends PureComponent {
       <View style={styles.container}>
         <NavigationEvents
           onDidFocus={()=>this.iniciarPantalla(this.navigation)}
+          onWillBlur={()=>{this.finalizarPantalla()}}
         />
           {
             loading? (
             // se esta cargando la pagina
               <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
-                  <ActivityIndicator color = "#efb810" size="large" color="#0000ff" />
+                  <ActivityIndicator color = "#efb810" size="large" />
                   { // Se ingresa automáticamente y se ingresa mal la huella
                     this.showButton(autoLogin)
                   }
@@ -213,7 +221,7 @@ export default class RegisterScreen extends PureComponent {
               // el usuario ya tenia sus datos cargados y tenía que entrar directo
               // Sin embargo, fallo o puso cancelar. Reintentar:
               <View style={{ flex:1,justifyContent:'center',alignItems:'center'}}>
-              <ButtonMenu title={'Continuar'}
+              <ButtonMenu title={'Ingresar'}
               onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
               </View>
               :  
