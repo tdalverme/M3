@@ -7,8 +7,11 @@ import {
   PermissionsAndroid,
   ToastAndroid,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
+  DeviceEventEmitter 
 } from 'react-native';
+import { SensorManager } from 'NativeModules';
+import { NavigationEvents } from 'react-navigation';
 
 import BluetoothSerial, {
   withSubscription
@@ -20,25 +23,31 @@ import HomeScreen from './HomeScreen';
 import FillingGlassHOC from './FillingGlassHOC';
 const HOCComponent = FillingGlassHOC(HomeScreen);
 
+
+
+
+
 let realm;
 class Home extends Component {
   state = {
     glassDetected: false,
     filling: false,
     drink: '',
-    porcentaje: null
+    porcentaje: null,
+    luz : 'LED_OFF'
   };
 
+  
+
   async componentDidMount() {
+    
+    actualizarLuz = (luz) => {
+      this.setState({luz})
+    }
     this.events = this.props.events;
     this.navigation = this.props.navigation;
     realm = new Realm({ path: 'UserDatabase.realm' });
     this.bebida = realm.objects('Drink')[0];
-
-    if(this.props.navigation.getParam('tragoAuto')){
-      this.startFilling()
-    }
-
 
     this.events.on("bluetoothDisabled", () => {
       ToastAndroid.show("Bluetooth desactivado.", ToastAndroid.SHORT);
@@ -54,6 +63,20 @@ class Home extends Component {
       },
       "\r\n"
     );
+
+    SensorManager.startLightSensor(100);
+    DeviceEventEmitter.addListener('LightSensor', function (data) {
+      if(data.light < 50){
+        actualizarLuz('LED_ON')
+        SensorManager.stopLightSensor();
+        DeviceEventEmitter.removeListener('LightSensor');
+      }
+    });
+
+    if(this.props.navigation.getParam('tragoAuto')){
+      this.startFilling()
+    }
+
   }
 
   parseMessage = (message) => {
@@ -69,16 +92,7 @@ class Home extends Component {
 
     switch (type) {
       case 'finished':
-        realm.write(() => {
-          realm.create('Ingested',{
-            bebida: this.bebida.name,
-            graduacionAlc : this.bebida.graduacionAlc * (this.bebida.ingredient1Percentage*250/100) * 0.80 / 100,
-            fecha : new Date(),
-            porcentaje : this.bebida.ingredient1Percentage
-
-          });
-        });
-        this.navigation.navigate('FeedBack',{bebida:this.bebida.name})
+        this.finishFilling()
         break;
       case 'change':
         this.setState({drink: data});
@@ -92,9 +106,22 @@ class Home extends Component {
       default:
     }
   }
+  finishFilling = async () => {
+    realm.write(() => {
+      realm.create('Ingested',{
+        bebida: this.bebida.name,
+        graduacionAlc : this.bebida.graduacionAlc * (this.bebida.ingredient1Percentage*250/100) * 0.80 / 100,
+        fecha : new Date(),
+        porcentaje : this.bebida.ingredient1Percentage
 
+      });
+    });
+    await BluetoothSerial.write(this.state.luz)
+    this.navigation.navigate('FeedBack',{bebida:this.bebida.name})
+  }
   startFilling = async () => {
-    this.setState({ drink: this.bebida.ingredient1, porcentaje:30 }, async () => {
+
+    this.setState({filling: true, drink: this.bebida.ingredient1,porcentaje:30}, async () => {
       await BluetoothSerial.clear();
       await BluetoothSerial.write('#' + this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
     });

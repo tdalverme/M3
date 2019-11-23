@@ -28,7 +28,7 @@ const Stack = createStackNavigator({
   FeedBack: feedBack,
   homeScreenComponent: HomeScreenComponent
 }, {
-  initialRouteName: 'Menu',
+  initialRouteName: 'Register',
 
   defaultNavigationOptions: ({ navigation }) =>(    {
     headerLeft:(

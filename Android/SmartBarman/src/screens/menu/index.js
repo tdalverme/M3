@@ -144,7 +144,7 @@ const Menu = ({ navigation }) => {
 
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'red' }}>
+    <View style={{ flex: 1}}>
 
       <ImageBackground
         style={{
@@ -164,12 +164,16 @@ const Menu = ({ navigation }) => {
           <View style={{ flex: 0.6, justifyContent: 'flex-start' }}>
             <ButtonMenu
               title="Preparar un trago"
-              onPress={() => { authenticate(navigation, 'Connection'); }}
+              onPress={() => { navigation.navigate('Connection'); }}
             />
 
             <ButtonMenu
               title="Ver mi estado alcohólico"
-              onPress={() => { authenticate(navigation, 'Records'); }}
+              onPress={() => { navigation.navigate('Records') }}
+            />
+            <ButtonMenu
+              title="Editar mis Datos"
+              onPress={() => { navigation.navigate('Register',{editarDatos:true}); }}
             />
 
           </View>
