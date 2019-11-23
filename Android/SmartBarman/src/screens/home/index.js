@@ -73,7 +73,7 @@ class Home extends Component {
     });
 
     if(this.props.navigation.getParam('tragoAuto')){
-      this.startFilling()
+      this.startFilling(bebidas[0]);
     }
   }
 

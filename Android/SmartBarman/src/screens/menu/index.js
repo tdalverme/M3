@@ -160,7 +160,7 @@ const Menu = ({ navigation }) => {
           <View style={{ flex: 0.6, justifyContent: 'flex-start' }}>
             <ButtonMenu
               title="Preparar un trago"
-              onPress={() => { navigation.navigate('Home'); }}
+              onPress={() => { navigation.navigate('Connection'); }}
             />
 
             <ButtonMenu

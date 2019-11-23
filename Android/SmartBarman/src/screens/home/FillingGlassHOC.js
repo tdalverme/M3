@@ -5,6 +5,7 @@ import {
 
 const coca_image = require('../../../' + 'assets/coca-cola.png');
 const fernet_image = require('../../../' + 'assets/fernet_2.jpg');
+const ron_image = require('../../../' + 'assets/ron.png');
 
 const Filling = ({ drink }) => (
   <View style={{
@@ -27,7 +28,7 @@ const Filling = ({ drink }) => (
     <View style={{ flex: 0.5 }}>
       <Image
         style={{ margin: 10, height: 200, width: 200 }}
-        source={drink === 'FERNET' ? fernet_image : coca_image}
+        source={drink === 'FERNET' ? fernet_image : drink === 'RON' ? ron_image : coca_image}
       />
     </View>
 
