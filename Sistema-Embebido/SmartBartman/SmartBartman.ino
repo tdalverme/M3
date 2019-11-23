@@ -23,6 +23,8 @@ int cantMediciones = 0;
 float sumadorTemp = 0;
 float temperatura;
 boolean msgStarted = false;
+boolean isCloseEnough = false;
+boolean ledOn = true;
 /****************************************/
 
 void setup() {
@@ -79,11 +81,22 @@ void loop() {
 
 void handleEsperandoInput() {
   if(getBluetoothMsg() == BT_MSG_OK) {
-    tragoSeleccionado = parseInput(&bluetoothMsg[0]);
-    bluetoothMsg = "";
-    config = getConfig(tragoSeleccionado);
-    estadoActual = STATE_ESPERANDO_VASO;
-    encenderLed(COLOR_AZUL);
+    if(bluetoothMsg.equals("LED_ON")){
+      ledOn = true;
+      encenderLed(COLOR_ROJO);
+    }
+    else if(bluetoothMsg.equals("LED_OFF")){
+      encenderLed(COLOR_APAGADO);
+      ledOn = false;
+    }
+    else {
+      tragoSeleccionado = parseInput(&bluetoothMsg[0]);    
+      config = getConfig(tragoSeleccionado);
+      estadoActual = STATE_ESPERANDO_VASO;
+      encenderLed(COLOR_AZUL);
+      resetMillis();
+    }
+    bluetoothMsg = "";  
   }
 }
 
@@ -100,9 +113,17 @@ void handleEsperandoInput() {
 
 void handleEsperandoVaso() {
 
-  if(glassIsCloseEnough()) {
+  if(millisPassed(500)) {
+    isCloseEnough = glassIsCloseEnough();
+    if(!isCloseEnough) {
+      sendMessage("detected|false");
+      Serial.println("[ESPERANDO_VASO] Vaso no detectado");
+      resetMillis();
+    }
+  }
+  if(millisPassed(2500) && isCloseEnough) {
+    isCloseEnough = false;
     Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
-
     primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
     segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
     primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
@@ -122,16 +143,12 @@ void handleEsperandoVaso() {
     Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
     Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
     sendMessage("detected|true");
-    sendMessage("change|FERNET");
+    sendMessage("change|FERNET");      
     encenderRelay(config.pinBebidaActual);
     estadoActual = STATE_SIRVIENDO_BEBIDA;
     encenderLed(COLOR_VERDE);
-    previousMillis = millis();
+    resetMillis();
   }
-  else {
-    sendMessage("detected|false");
-  }
-
 }
 
 
@@ -283,22 +300,29 @@ void resetMillis() {
 }
 
 void encenderLed(int color) {
-  switch(color) {
-    case COLOR_AZUL:
-      analogWrite(PIN_LED_1, 255);
-      analogWrite(PIN_LED_2, 000);
-      analogWrite(PIN_LED_3, 000);
-      break;
-    case COLOR_VERDE:
-      analogWrite(PIN_LED_1, 000);
-      analogWrite(PIN_LED_2, 255);
-      analogWrite(PIN_LED_3, 000);
-      break;
-    case COLOR_ROJO:
-      analogWrite(PIN_LED_1, 000);
-      analogWrite(PIN_LED_2, 000);
-      analogWrite(PIN_LED_3, 255);
-      break;
+  if(ledOn) {
+    switch(color) {
+      case COLOR_AZUL:
+        analogWrite(PIN_LED_1, 255);
+        analogWrite(PIN_LED_2, 000);
+        analogWrite(PIN_LED_3, 000);
+        break;
+      case COLOR_VERDE:
+        analogWrite(PIN_LED_1, 000);
+        analogWrite(PIN_LED_2, 255);
+        analogWrite(PIN_LED_3, 000);
+        break;
+      case COLOR_ROJO:
+        analogWrite(PIN_LED_1, 000);
+        analogWrite(PIN_LED_2, 000);
+        analogWrite(PIN_LED_3, 255);
+        break;
+      case COLOR_APAGADO:
+        analogWrite(PIN_LED_1, 0);
+        analogWrite(PIN_LED_2, 0);
+        analogWrite(PIN_LED_3, 0);
+        break;
+    } 
   }
 }
 

@@ -31,6 +31,7 @@
 #define COLOR_ROJO 30
 #define COLOR_AZUL 31
 #define COLOR_VERDE 32
+#define COLOR_APAGADO 33
 
 //Estados posibles
 #define STATE_ESPERANDO_INPUT 20
