@@ -10,40 +10,39 @@ const UserSchema = {
     username: 'string',
     height: 'float',
     weight: 'float',
-    alcoholLevel: {type: 'float', optional: true},
-    alcoholicDrinkPercentage: {type: 'float', optional: true}
-  }
+    alcoholLevel: { type: 'float', optional: true },
+    alcoholicDrinkPercentage: { type: 'float', optional: true },
+  },
 };
 
 const DrinkSchema = {
   name: 'Drink',
   properties: {
     name: 'string',
-    ingredient1:'string',
+    ingredient1: 'string',
     ingredient1Percentage: 'float',
-    ingredient2:'string',
-    graduacionAlc: 'float'
-  }
+    ingredient2: 'string',
+    graduacionAlc: 'float',
+  },
 };
 
 const DrinksIngestedSchema = {
-  name : 'Ingested',
-  properties:{
+  name: 'Ingested',
+  properties: {
     bebida: 'string',
-    graduacionAlc : 'float',
-    fecha : 'date',
-    porcentaje : 'float'
-  }
-}
-
+    graduacionAlc: 'float',
+    fecha: 'date',
+    porcentaje: 'float',
+    temperature: 'string',
+  },
+};
 
 
 export default class App extends React.Component {
-
   componentWillMount() {
     Realm.open({
       path: 'UserDatabase.realm',
-      schema: [UserSchema, DrinkSchema,DrinksIngestedSchema]
+      schema: [UserSchema, DrinkSchema, DrinksIngestedSchema],
     });
   }
 

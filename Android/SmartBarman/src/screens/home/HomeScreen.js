@@ -67,16 +67,10 @@ const GlassDetectedMessage = ({ detected, filling }) => {
 let realm;
 
 class HomeScreen extends PureComponent {
-  constructor(props) {
-    super(props);
-    realm = new Realm({ path: 'UserDatabase.realm' });
-    this.bebida = realm.objects('Drink');
-  }
-
   render() {
-    const { glassDetected, startFilling, filling } = this.props;
-
-    const serviceBebida = this.bebida.map((s, i) => <Picker.Item key={s.name} value={s.name} label={s.name} />);
+    const {
+      glassDetected, startFilling, filling, bebidas, currentDrink, changeCurrentDrink,
+    } = this.props;
 
     return (
       <View style={styles.container}>
@@ -86,7 +80,6 @@ class HomeScreen extends PureComponent {
           }}
           source={require('../../../assets/seleccion_bebida.jpg')}
         >
-
           <View style={{
             flex: 0.7,
             flexDirection: 'column',
@@ -101,16 +94,30 @@ class HomeScreen extends PureComponent {
               alignItems: 'center',
             }}
             >
-              <ButtonSlider title={'<'} onPress={() => ToastAndroid.show('No se encontraron tragos', ToastAndroid.SHORT)} />
-              <Image style={{ width: 200, height: 200 }} source={require('../../../assets/fernet.jpg')} />
-              <ButtonSlider title={'>'} onPress={() => ToastAndroid.show('No se encontraron tragos', ToastAndroid.SHORT)} />
+              <ButtonSlider
+                title={'<'}
+                onPress={() => {
+                  if (currentDrink - 1 >= 0) {
+                    changeCurrentDrink(currentDrink - 1);
+                  }
+                }}
+              />
+              <Image style={{ width: 200, height: 200 }} source={currentDrink === 0 ? require('../../../assets/fernet.jpg') : require('../../../assets/ron-con-coca-cola.jpg')} />
+              <ButtonSlider
+                title={'>'}
+                onPress={() => {
+                  if (currentDrink + 1 < bebidas.length) {
+                    changeCurrentDrink(currentDrink + 1);
+                  }
+                }}
+              />
             </View>
             <View style={{ flex: 0.2, justifyContent: 'flex-start' }}>
-              <Text style={styles.text}>Fernet con Coca</Text>
+              <Text style={styles.text}>{bebidas[currentDrink] ? bebidas[currentDrink].name : ''}</Text>
             </View>
           </View>
           <View style={{ flex: 0.3, alignItems: 'center' }}>
-            <ButtonMenu title="Comenzar" onPress={startFilling} />
+            <ButtonMenu title="Comenzar" onPress={() => { startFilling(bebidas[currentDrink]); }} />
 
           </View>
           <View style={{ flex: 0.5, justifyContent: 'flex-end' }}>
@@ -126,4 +133,5 @@ HomeScreen.navigationOptions = ({ navigation }) => ({
   headerTitle: 'Estado Alcohólico',
   headerLeft: (<View />),
 });
+
 export default HomeScreen;

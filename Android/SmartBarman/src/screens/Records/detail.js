@@ -62,7 +62,7 @@ export default class DetailScreen extends PureComponent {
 
   async componentDidMount() {
     realm = new Realm({ path: 'UserDatabase.realm' });
- 
+
     let r = realm.objects('Ingested').filter((aux) =>
       compararFechas(aux)
     )
@@ -78,9 +78,9 @@ export default class DetailScreen extends PureComponent {
       </View>
       :
       <View  style={styles.container}>
-      <FlatList  
+      <FlatList
       keyExtractor = {(item, index) => index.toString()}
-      data = {data} 
+      data = {data}
       renderItem = {({ item }) => (
         <View style = {styles.containerHorizontal}>
           <View style = {styles.containerVertical}>
@@ -90,14 +90,14 @@ export default class DetailScreen extends PureComponent {
           </View>
           <View style = {styles.containerVertical}>
             <View style = {styles.containerHorizontal}>
-              <View style = {styles.containerHorizontal}> 
+              <View style = {styles.containerHorizontal}>
                 <Text  style= {styles.textLeft}>Alcohol </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
                   {parseFloat(item.graduacionAlc).toFixed(2)} gr
-                </Text> 
-              </View>  
+                </Text>
+              </View>
             </View>
 
             <View style = {styles.containerHorizontal}>
@@ -113,12 +113,12 @@ export default class DetailScreen extends PureComponent {
 
             <View style = {styles.containerHorizontal}>
               <View style = {styles.containerHorizontal}>
-                <Text  style= {styles.textLeft}>Fecha </Text>
+                <Text  style= {styles.textLeft}>Hora </Text>
               </View>
               <View style = {styles.containerHorizontal}>
                 <Text style= {styles.textLeft}>
                   { moment(item.fecha).format('HH:mm:ss')
-                   } 
+                   }
                 </Text>
               </View>
             </View>
