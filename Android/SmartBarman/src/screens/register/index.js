@@ -26,10 +26,6 @@ const config = {
   unifiedErrors: true, // use unified error messages (default false)
 };
 
-
-
-
-
 const styles = StyleSheet.create({
   container: {
     flex:1,
@@ -103,7 +99,7 @@ export default class RegisterScreen extends PureComponent {
                 actualizar();
               }
               //me voy de la pantalla guardo el estado por si vuelvo
-              // si vuelvo, tiene que aparecer cargando y el autoLogin 
+              // si vuelvo, tiene que aparecer cargando y el autoLogin
               //deja de aplicar
               this.setState({loading:true,autoLogin:false})
               navigation.navigate(page);
@@ -122,7 +118,7 @@ export default class RegisterScreen extends PureComponent {
         navigation.navigate(page);
       });
   };
-  
+
 
   iniciarPantalla = async (navigation)  =>{
     this.setState({
@@ -141,8 +137,8 @@ export default class RegisterScreen extends PureComponent {
     }else if(user && user.username && user.weight && user.height ) {
       //inicio automático
       this.setState({loading: false,editar:false,autoLogin:true});
-      this.authenticate(navigation, 'Menu')  
-      
+      this.authenticate(navigation, 'Menu')
+
     } else {
       //ingreso por primera vez
       this.setState({loading: false});
@@ -186,7 +182,7 @@ export default class RegisterScreen extends PureComponent {
   submit = () => {
     const { navigation } = this.props;
     if(this.validInfo()) {
-      
+
       this.authenticate(navigation, 'Menu',this.saveInfo)
     } else {
       ToastAndroid.show('Debe completar todos los campos para continuar', ToastAndroid.SHORT);
@@ -213,10 +209,10 @@ export default class RegisterScreen extends PureComponent {
                     this.showButton(autoLogin)
                   }
 
-                  
-                  
+
+
               </View>
-      
+
             ):( !editar?
               // el usuario ya tenia sus datos cargados y tenía que entrar directo
               // Sin embargo, fallo o puso cancelar. Reintentar:
@@ -224,36 +220,36 @@ export default class RegisterScreen extends PureComponent {
               <ButtonMenu title={'Ingresar'}
               onPress={() =>  this.authenticate(this.props.navigation, 'Menu')}/>
               </View>
-              :  
+              :
               //Pantalla de carga y/o edición de datos
               <View style={{flex:1}}>
               <View style={{ flex: 0.2,justifyContent:'center'}}>
                 <Text style={styles.title}>¡Bienvenido!</Text>
               </View>
               <View style ={{flex:0.6,justifyContent:'space-between'}}>
-                  <InputBarman 
-                      title={'Nombre'} 
+                  <InputBarman
+                      title={'Nombre'}
                       onChangeText={value => this.setState({username: value})}
                       value={username}
                       keyboardType={'default'}
                   />
-                  <InputBarman 
-                      title={'Altura'} 
+                  <InputBarman
+                      title={'Altura (cm)'}
                       onChangeText={value => this.setState({height: parseFloat(value)})}
                       value={height}
                       keyboardType={'numeric'}
                   />
                   <InputBarman
-                      title={'Peso'} 
+                      title={'Peso (kg)'}
                       onChangeText={value => this.setState({weight: parseFloat(value)})}
                       value={weight}
                       keyboardType={'numeric'}
                   />
-              
+
                 <Text style={{alignSelf: 'center', textAlign: 'center', fontSize: 14, fontStyle: 'italic',color:'white',padding:5}}>
                   Necesitamos su altura y peso para realizar cálculos</Text>
               </View>
-            
+
               <View style={{flex:0.3,justifyContent:'center',alignItems:'center'}}>
                   <ButtonMenu title={'Continuar'}
                   onPress={() =>  this.submit()}/>

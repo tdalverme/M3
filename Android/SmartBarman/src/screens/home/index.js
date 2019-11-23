@@ -8,7 +8,7 @@ import {
   ToastAndroid,
   FlatList,
   TouchableOpacity,
-  DeviceEventEmitter 
+  DeviceEventEmitter
 } from 'react-native';
 import { SensorManager } from 'NativeModules';
 import { NavigationEvents } from 'react-navigation';
@@ -23,32 +23,31 @@ import HomeScreen from './HomeScreen';
 import FillingGlassHOC from './FillingGlassHOC';
 const HOCComponent = FillingGlassHOC(HomeScreen);
 
-
-
-
-
 let realm;
 class Home extends Component {
   state = {
     glassDetected: false,
     filling: false,
     drink: '',
+    temperature: '',
     porcentaje: null,
-    luz : 'LED_OFF'
+    luz : 'LED_OFF',
+    currentDrink: 0,
+    bebidas: []
   };
 
-  
-
   async componentDidMount() {
-    
+
     actualizarLuz = (luz) => {
       this.setState({luz})
     }
     this.events = this.props.events;
     this.navigation = this.props.navigation;
     realm = new Realm({ path: 'UserDatabase.realm' });
-    this.bebida = realm.objects('Drink')[0];
+    const drinks = realm.objects('Drink');
 
+    const bebidas = drinks.map((x) => ({ ...x }));
+    this.setState({bebidas});
     this.events.on("bluetoothDisabled", () => {
       ToastAndroid.show("Bluetooth desactivado.", ToastAndroid.SHORT);
     });
@@ -74,9 +73,8 @@ class Home extends Component {
     });
 
     if(this.props.navigation.getParam('tragoAuto')){
-      this.startFilling()
+      this.startFilling(bebidas[0]);
     }
-
   }
 
   parseMessage = (message) => {
@@ -92,7 +90,7 @@ class Home extends Component {
 
     switch (type) {
       case 'finished':
-        this.finishFilling()
+        this.finishFilling();
         break;
       case 'change':
         this.setState({drink: data});
@@ -100,30 +98,39 @@ class Home extends Component {
       case 'detected':
         this.setState({glassDetected: data === 'true', filling: true});
         break;
+      case 'temperature':
+        this.setState({ temperature: data });
+        break;
       case 'filling':
         this.setState({filling: data === 'true'});
         break;
       default:
     }
   }
+
+  changeCurrentDrink = (index) => {
+    this.setState({ currentDrink: index });
+  }
+
   finishFilling = async () => {
+    const { temperature, bebidas, currentDrink } = this.state;
     realm.write(() => {
       realm.create('Ingested',{
-        bebida: this.bebida.name,
-        graduacionAlc : this.bebida.graduacionAlc * (this.bebida.ingredient1Percentage*250/100) * 0.80 / 100,
+        bebida: bebidas[currentDrink].name,
+        graduacionAlc : bebidas[currentDrink].graduacionAlc * (bebidas[currentDrink].ingredient1Percentage * 250 / 100) * 0.80 / 100,
         fecha : new Date(),
-        porcentaje : this.bebida.ingredient1Percentage
-
+        porcentaje : bebidas[currentDrink].ingredient1Percentage,
+        temperature
       });
     });
     await BluetoothSerial.write(this.state.luz)
-    this.navigation.navigate('FeedBack',{bebida:this.bebida.name})
+    this.navigation.navigate('FeedBack', { temperature, bebida: bebidas[currentDrink].name})
   }
-  startFilling = async () => {
 
-    this.setState({filling: true, drink: this.bebida.ingredient1,porcentaje:30}, async () => {
+  startFilling = async (bebida) => {
+    this.setState({filling: true, drink: bebida.ingredient1, porcentaje:30}, async () => {
       await BluetoothSerial.clear();
-      await BluetoothSerial.write('#' + this.bebida.ingredient1 +'|'+this.bebida.ingredient1Percentage+'|'+this.bebida.ingredient2+'@')
+      await BluetoothSerial.write('#' + bebida.ingredient1 +'|'+ bebida.ingredient1Percentage+'|'+ bebida.ingredient2+'@')
     });
   }
 
@@ -132,17 +139,20 @@ class Home extends Component {
   }
 
   render() {
-    const { glassDetected, filling, drink } = this.state;
+    const { glassDetected, filling, drink, currentDrink, bebidas } = this.state;
     return (
       <HOCComponent
         drink={drink}
         filling={filling}
         glassDetected={glassDetected}
-        startFilling={this.startFilling}/>
+        startFilling={this.startFilling}
+        changeCurrentDrink={this.changeCurrentDrink}
+        currentDrink={currentDrink}
+        bebidas={bebidas || []}
+        />
     );
   }
 }
-
 
 export default withSubscription({
     subscriptionName: 'events',

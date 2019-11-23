@@ -4,13 +4,13 @@ import {
   View,
   Text,
   ImageBackground,
-  DeviceEventEmitter ,
-  Alert
+  DeviceEventEmitter,
+  Alert,
 } from 'react-native';
 import TouchID from 'react-native-touch-id';
 import { SensorManager } from 'NativeModules';
-import ButtonMenu from '../../utils/ButtonMenu';
 import { NavigationEvents } from 'react-navigation';
+import ButtonMenu from '../../utils/ButtonMenu';
 
 const Realm = require('realm');
 
@@ -88,37 +88,38 @@ const authenticate = (navigation, page) => {
 };
 
 
-const subscribeAcelerometer = (navigation )=> {
-  const sensibility = 50
+const subscribeAcelerometer = (navigation) => {
+  const sensibility = 50;
   SensorManager.startAccelerometer(100); // To start the accelerometer with a minimum delay of 100ms between events.
-  DeviceEventEmitter.addListener('Accelerometer', function (data) {
-    let aceleracion = Math.sqrt(Math.pow(data.x,2)+Math.pow(data.y,2)+Math.pow(data.z,2))
-    if(aceleracion > sensibility ){
-      SensorManager.stopAccelerometer()
-      Alert.alert("¿Querés un fernet ya?", 
-      "",
-      [
-      {text: "Ahora no" },
-      {text: "See", onPress: () => {
-        unSubscribeAcelerometer()
-        navigation.navigate('Connection',{tragoAuto:true})
-
-      }}
-      ])
-      setTimeout(()=>SensorManager.startAccelerometer(100),1000)
+  DeviceEventEmitter.addListener('Accelerometer', (data) => {
+    const aceleracion = Math.sqrt(Math.pow(data.x, 2) + Math.pow(data.y, 2) + Math.pow(data.z, 2));
+    if (aceleracion > sensibility) {
+      SensorManager.stopAccelerometer();
+      Alert.alert('¿Querés un fernet ya?',
+        '',
+        [
+          { text: 'Ahora no' },
+          {
+            text: 'See',
+            onPress: () => {
+              unSubscribeAcelerometer();
+              navigation.navigate('Connection', { tragoAuto: true });
+            },
+          },
+        ]);
+      setTimeout(() => SensorManager.startAccelerometer(100), 1000);
     }
   });
-}
-const unSubscribeAcelerometer = (navigation )=> {
-  DeviceEventEmitter.removeListener('Accelerometer')
+};
+const unSubscribeAcelerometer = (navigation) => {
+  DeviceEventEmitter.removeListener('Accelerometer');
   SensorManager.stopAccelerometer();
-}
+};
 const Menu = ({ navigation }) => {
   realm = new Realm({ path: 'UserDatabase.realm' });
   realm.write(() => {
     if (
-      realm.objects('Drink').filter((aux) => aux.name === 'Fernet con COCA')
-        .length == 0
+      realm.objects('Drink').length === 0
     ) {
       realm.create('Drink', {
         name: 'Fernet con Coca',
@@ -127,16 +128,11 @@ const Menu = ({ navigation }) => {
         ingredient2: 'COCA',
         graduacionAlc: 39,
       });
-    }
-    if (
-      realm.objects('Drink').filter((aux) => aux.name === 'Gancia con Sprite')
-        .length == 0
-    ) {
       realm.create('Drink', {
-        name: 'Gancia con Sprite',
-        ingredient1: 'GANCIA',
+        name: 'Ron con Coca',
+        ingredient1: 'RON',
         ingredient1Percentage: 30,
-        ingredient2: 'SPRITE',
+        ingredient2: 'COCA',
         graduacionAlc: 39,
       });
     }
@@ -144,7 +140,7 @@ const Menu = ({ navigation }) => {
 
 
   return (
-    <View style={{ flex: 1}}>
+    <View style={{ flex: 1 }}>
 
       <ImageBackground
         style={{
@@ -154,8 +150,8 @@ const Menu = ({ navigation }) => {
         source={require('../../../assets/menu_principal.jpg')}
       >
         <NavigationEvents
-          onDidFocus={()=>subscribeAcelerometer(navigation)}
-          onWillBlur={()=>unSubscribeAcelerometer(navigation)}
+          onDidFocus={() => subscribeAcelerometer(navigation)}
+          onWillBlur={() => unSubscribeAcelerometer(navigation)}
         />
         <View style={{ flex: 0.7 }}>
           <View style={{ flex: 0.4, justifyContent: 'center' }}>
@@ -169,11 +165,11 @@ const Menu = ({ navigation }) => {
 
             <ButtonMenu
               title="Ver mi estado alcohólico"
-              onPress={() => { navigation.navigate('Records') }}
+              onPress={() => { navigation.navigate('Records'); }}
             />
             <ButtonMenu
               title="Editar mis Datos"
-              onPress={() => { navigation.navigate('Register',{editarDatos:true}); }}
+              onPress={() => { navigation.navigate('Register', { editarDatos: true }); }}
             />
 
           </View>
