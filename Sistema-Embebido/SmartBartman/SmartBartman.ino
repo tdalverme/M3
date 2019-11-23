@@ -1,8 +1,30 @@
 #include "Input.h"
+#include <SoftwareSerial.h>
+#include "HX711.h"
 
 /****************************************/
+SoftwareSerial BT(PIN_BT_RX, PIN_BT_TX);
+HX711 scale;
+
 int estadoActual;
+String bluetoothMsg;
+unsigned long previousMillis;
+Trago tragoSeleccionado;
+ConfigTrago config;
+int primerIncremental;
+int segundoIncremental;
+int incremental;
+int primerTopeEnGramos;
+int segundoTopeEnGramos;
+boolean finished;
+int estadoSirviendoBebida;
+float pesoActual;
+int cantMediciones = 0;
+float sumadorTemp = 0;
+float temperatura;
+boolean msgStarted = false;
 /****************************************/
+
 void setup() {
   Serial.begin(9600);       //Abrimos la comunicación serie con el PC y establecemos velocidad
   BT.begin(9600);           //Velocidad del puerto del módulo Bluetooth
@@ -10,28 +32,23 @@ void setup() {
 
   pinMode(PIN_RELAY_FERNET, OUTPUT);
   pinMode(PIN_RELAY_COCA, OUTPUT);
+  pinMode(PIN_RELAY_RON, OUTPUT);
+  apagarRelay(PIN_RELAY_FERNET);
+  apagarRelay(PIN_RELAY_COCA);
+  apagarRelay(PIN_RELAY_RON);
 
   pinMode(PIN_BUZZER, OUTPUT);
 
-  pinMode(PIN_ULTRASONIDO_TRIG, OUTPUT); // Sets the trigPin as an Output
-  pinMode(PIN_ULTRASONIDO_ECHO, INPUT); // Sets the echoPin as an Input
-
-  apagarRelay(PIN_RELAY_FERNET);
-  apagarRelay(PIN_RELAY_COCA);
+  pinMode(PIN_ULTRASONIDO_TRIG, OUTPUT);
+  pinMode(PIN_ULTRASONIDO_ECHO, INPUT);
 
   estadoActual = STATE_ESPERANDO_INPUT;
-
-  encenderLed1();
+  estadoSirviendoBebida = STATE_RELAY_OFF;
+  encenderLed(COLOR_ROJO);
 
   Serial.println("[SETUP] Setup terminado");
   Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
 }
-
-/****************************************/
-Trago tragoSeleccionado;
-ConfigTrago config;
-
-/****************************************/
 
 void loop() {
   switch(estadoActual) {
@@ -51,6 +68,10 @@ void loop() {
       handleBebidaFinalizada();
       break;
 
+    case STATE_NOTIFICAR_BEBIDA_LISTA:
+      handleNotificarBebidaLista();
+      break;
+
     default:
       break;
   }
@@ -62,29 +83,11 @@ void handleEsperandoInput() {
     bluetoothMsg = "";
     config = getConfig(tragoSeleccionado);
     estadoActual = STATE_ESPERANDO_VASO;
-    encenderLed2();
+    encenderLed(COLOR_AZUL);
   }
 }
 
 /****************************************/
-unsigned long previousMillis;
-/****************************************/
-boolean millisPassed(long n) {
-  return millis() - previousMillis >= n;
-}
-
-void resetMillis() {
-  previousMillis = millis();
-}
-
-/****************************************/
-int primerIncremental;
-int segundoIncremental;
-int incremental;
-int primerTopeEnGramos;
-int segundoTopeEnGramos;
-boolean finished;
-
 //200g = FERNET 30% + COCA 70%
 //200g = 200g / 100 * 30 + 200g / 100 * 70
 //200g = 60g + 140g
@@ -95,8 +98,164 @@ boolean finished;
 //60g ~= 30g + 15g + 10g +10g
 /****************************************/
 
+void handleEsperandoVaso() {
 
-boolean measureGlassPosition() {
+  if(glassIsCloseEnough()) {
+    Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
+
+    primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
+    segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
+    primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+    segundoIncremental = (int) (segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+    incremental = primerIncremental;
+    finished = false;
+
+    Serial.print("\tPrimer tope: ");
+    Serial.print(primerTopeEnGramos);
+    Serial.print("\tPrimer incremental: ");
+    Serial.println(primerIncremental);
+    Serial.print("\tSegundo tope: ");
+    Serial.print(segundoTopeEnGramos);
+    Serial.print("\tSegundo incremental: ");
+    Serial.println(segundoIncremental);
+
+    Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
+    Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
+    sendMessage("detected|true");
+    sendMessage("change|FERNET");
+    encenderRelay(config.pinBebidaActual);
+    estadoActual = STATE_SIRVIENDO_BEBIDA;
+    encenderLed(COLOR_VERDE);
+    previousMillis = millis();
+  }
+  else {
+    sendMessage("detected|false");
+  }
+
+}
+
+
+
+void handleSirviendoBebida() {
+    if(!finished) {
+      switch(estadoSirviendoBebida) {
+        case STATE_RELAY_OFF:
+          if(millisPassed(incremental)){
+            apagarRelay(config.pinBebidaActual);
+            log_float("[SIRVIENDO_BEBIDA][RELE_OFF] Llenado por: ", millis() - previousMillis, "ms");
+            estadoSirviendoBebida = STATE_GETTING_WEIGHT;
+          }
+          break;
+        case STATE_GETTING_WEIGHT:
+          if(millisPassed(2500 + incremental)) {
+            log_float("[SIRVIENDO_BEBIDA][WEIGHT] Se espero hasta: ", millis() - previousMillis, "ms");
+            pesoActual = getWeight();
+            estadoSirviendoBebida = STATE_RELAY_ON;
+          }
+          break;
+        case STATE_RELAY_ON:
+          if(millisPassed(5000 + incremental)){
+            log_float("[SIRVIENDO_BEBIDA][RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");
+            if(pesoActual >= PESO_MAX){
+              finished = true;
+              Serial.println("[SIRVIENDO_BEBIDA][FINISHED] Bebida lista");
+            }
+            else if(pesoActual >= config.pesoObjetivo)
+              siguienteBebida();
+            else if(incremental > MINIMO_SERVIDO_TIEMPO){
+              if(incremental / 2 > MINIMO_SERVIDO_TIEMPO)
+                incremental /= 2;
+              else
+                incremental = MINIMO_SERVIDO_TIEMPO;
+            }
+            estadoSirviendoBebida = STATE_RELAY_OFF;
+            resetMillis();
+            if(!finished)
+              encenderRelay(config.pinBebidaActual);
+            }
+            break;
+          }
+        }
+    else {
+      estadoActual = STATE_BEBIDA_FINALIZADA;
+    }
+}
+
+void handleBebidaFinalizada() {
+  if(cantMediciones < CANT_MEDICIONES_TEMP) {
+    sumadorTemp += getTemperatura();
+    cantMediciones++;
+  }
+  else {
+    temperatura = sumadorTemp / CANT_MEDICIONES_TEMP;
+    cantMediciones = 0;
+    sumadorTemp = 0;
+    Serial.print("[BEBIDA_FINALIZADA] Temperatura de trago: ");
+    Serial.print(temperatura);
+    Serial.println("°C");
+    estadoActual = STATE_NOTIFICAR_BEBIDA_LISTA;
+    resetMillis();
+    digitalWrite(PIN_BUZZER, HIGH);
+  }
+}
+
+
+
+void handleNotificarBebidaLista() {
+  if(millisPassed(1000)) {
+    digitalWrite(PIN_BUZZER, LOW);
+    String logTemperature = "temperature|" + String(temperatura);
+    sendMessage(logTemperature);
+    sendMessage("finished");
+    estadoActual = STATE_ESPERANDO_INPUT;
+    encenderLed(COLOR_ROJO);
+    resetMillis();
+    Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
+  }
+}
+
+
+
+                /*UTILS*/
+/****************************************/
+void encenderRelay(int pin) {
+  digitalWrite(pin, LOW);
+}
+
+void apagarRelay(int pin) {
+  digitalWrite(pin, HIGH);
+}
+
+void siguienteBebida() {
+  config.pinBebidaActual = config.pinBebida2;
+  config.pesoObjetivo += segundoTopeEnGramos;
+  incremental = segundoIncremental;
+  Serial.println("[SIRVIENDO_BEBIDA][CAMBIO] Siguiente bebida");
+  sendMessage("change|COCA");
+}
+
+void log_float(String msg, float n, String unit) {
+  String now = "[" + String(millis() / 1000) + "s] ";
+  Serial.print(now);
+  Serial.print(msg);
+  Serial.print(n);
+  Serial.println(unit);
+}
+
+float getWeight() {
+  float pesoActual;
+  for(int i = 0; i < 10; i++){
+    pesoActual = scale.get_units(3);
+    if( pesoActual >= 0)
+    break;
+    else
+    pesoActual = -999;
+  }
+  log_float("\t\tPeso actual: ", pesoActual, "g");
+  return pesoActual;
+}
+
+boolean glassIsCloseEnough() {
   // Clears the trigPin
   digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
   delayMicroseconds(2);
@@ -114,139 +273,149 @@ boolean measureGlassPosition() {
   return (distance <= DISTANCIA_VASO_MAX);
 }
 
-void handleEsperandoVaso() {
 
-  if(measureGlassPosition()) {
-    Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
-
-    primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
-    segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
-    primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
-    segundoIncremental = (int) (segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
-    incremental = primerIncremental;
-    finished = false;
-  
-    Serial.print("\tPrimer tope: ");
-    Serial.print(primerTopeEnGramos);
-    Serial.print("\tPrimer incremental: ");
-    Serial.println(primerIncremental);
-    Serial.print("\tSegundo tope: ");
-    Serial.print(segundoTopeEnGramos);
-    Serial.print("\tSegundo incremental: ");
-    Serial.println(segundoIncremental);
-  
-    Serial.println("[SIRVIENDO_BEBIDA] Sirviendo");
-    Serial.println("[SIRVIENDO_BEBIDA][RELE_ON] Sirviendo...");
-    sendMessage("detected|true");
-    sendMessage("change|FERNET");
-    encenderRelay(config.pinBebidaActual);  
-    estadoActual = STATE_SIRVIENDO_BEBIDA;
-    encenderLed3();
-    previousMillis = millis();
-  }
-  else {
-    sendMessage("detected|false");
-  }
-  
+boolean millisPassed(long n) {
+  return millis() - previousMillis >= n;
 }
 
-void siguienteBebida() {
-  config.pinBebidaActual = config.pinBebida2;
-  config.pesoObjetivo += segundoTopeEnGramos;
-  incremental = segundoIncremental;
-  Serial.println("[SIRVIENDO_BEBIDA][CAMBIO] Siguiente bebida");
-  sendMessage("change|COCA");
+void resetMillis() {
+  previousMillis = millis();
 }
 
-/****************************************/
-boolean done1 = false;
-boolean done2 = false;
-float pesoActual;
-/****************************************/
+void encenderLed(int color) {
+  switch(color) {
+    case COLOR_AZUL:
+      analogWrite(PIN_LED_1, 255);
+      analogWrite(PIN_LED_2, 000);
+      analogWrite(PIN_LED_3, 000);
+      break;
+    case COLOR_VERDE:
+      analogWrite(PIN_LED_1, 000);
+      analogWrite(PIN_LED_2, 255);
+      analogWrite(PIN_LED_3, 000);
+      break;
+    case COLOR_ROJO:
+      analogWrite(PIN_LED_1, 000);
+      analogWrite(PIN_LED_2, 000);
+      analogWrite(PIN_LED_3, 255);
+      break;
+  }
+}
 
-void handleSirviendoBebida() {
-    if(!finished) {
+void initBalanza() {
+  scale.begin(PIN_BALANZA_DOUT, PIN_BALANZA_CLK);
+  scale.set_scale();
+  scale.tare();
+  scale.set_scale(FACTOR_CALIBRACION);
+}
 
-      if(millisPassed(incremental) && !done1) {
-        apagarRelay(config.pinBebidaActual);
-        log_float("[SIRVIENDO_BEBIDA][RELE_OFF] Llenado por: ", millis() - previousMillis, "ms");
-        done1 = true;
+void btFlush(){
+  while(BT.available() > 0) {
+    char t = BT.read();
+  }
+}
+
+int getBluetoothMsg() {
+  if(BT.available()) {
+    delay(50);
+    char c = BT.read();
+
+    if(c == '#'){
+      msgStarted = true;
+      return BT_MSG_PENDING;
+    }
+    if(msgStarted) {
+      if (c != '@') {
+        bluetoothMsg += c;
+        return BT_MSG_PENDING;
       }
-      if(millisPassed(2500 + incremental) && !done2) {
-        log_float("[SIRVIENDO_BEBIDA][WEIGHT] Se espero hasta: ", millis() - previousMillis, "ms");
-        pesoActual = getWeight();
-        done2 = true;
-      }
-       if(millisPassed(5000 + incremental)){
-        
-        log_float("[SIRVIENDO_BEBIDA][RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");        
-        if(pesoActual >= PESO_MAX){
-          finished = true;
-          Serial.println("[SIRVIENDO_BEBIDA][FINISHED] Bebida lista");
-        }
-        else if(pesoActual >= config.pesoObjetivo)
-          siguienteBebida();
-        else if(incremental > MINIMO_SERVIDO_TIEMPO)
-          incremental /= 2;
-        done1 = false;
-        done2 = false;
-        resetMillis();
-        if(!finished)
-          encenderRelay(config.pinBebidaActual);
-        
+      else {
+        Serial.print("[ESPERANDO_INPUT][MSG] ");
+        Serial.println(bluetoothMsg);
+        Serial.print("[ESPERANDO_INPUT][BYTES_READ] ");
+        Serial.println(bluetoothMsg.length());
+        btFlush();
+        msgStarted = false;
+        return BT_MSG_OK;
       }
     }
-    else {
-      estadoActual = STATE_BEBIDA_FINALIZADA;
-      sendMessage("finished");
-      digitalWrite(PIN_BUZZER, HIGH);
-      delay(1000);
-      digitalWrite(PIN_BUZZER, LOW);
-    }
+    return BT_MSG_PENDING;
+  }
+  return BT_MSG_NOT_AVAILABLE;
 }
 
-/****************************************/
-int cantMediciones = 0;
-float sumadorTemp = 0;
-float temperatura;
-/****************************************/
+void sendMessage(String message) {
+  BT.println(message);
+  btFlush();
+}
 
-void handleBebidaFinalizada() {
-  if(cantMediciones < CANT_MEDICIONES_TEMP) {
-    sumadorTemp += getTemperatura();
-    cantMediciones++;
+Trago parseInput(String bluetoothMsg) {
+  char* tokens[3];
+  Trago tragoRecibido;
+
+  char _bluetoothMsg[bluetoothMsg.length() + 1];
+  bluetoothMsg.toCharArray(_bluetoothMsg, bluetoothMsg.length() + 1);
+
+  tokens[0] = strtok(_bluetoothMsg,"|");
+  for(int i = 1; i < 3; i++) {
+    tokens[i] = strtok(NULL,"|");
   }
-  else {
-    temperatura = sumadorTemp / CANT_MEDICIONES_TEMP;
-    cantMediciones = 0;
-    sumadorTemp = 0;
-    Serial.print("[BEBIDA_FINALIZADA] Temperatura de trago: ");
-    Serial.print(temperatura);
-    Serial.println("°C");
-    estadoActual = STATE_ESPERANDO_INPUT;
-    encenderLed1();
-    Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
-  }
+
+  strcpy(tragoRecibido.bebida1, tokens[0]);
+  tragoRecibido.bebida1Porcentaje = atoi(tokens[1]);
+  strcpy(tragoRecibido.bebida2, tokens[2]);
+  tragoRecibido.bebida2Porcentaje = 100 - tragoRecibido.bebida1Porcentaje;
+
+  Serial.println("[ESPERANDO_INPUT] Mensaje parseado");
+  Serial.print("\tBebida1: ");
+  Serial.print(tragoRecibido.bebida1);
+  Serial.print(" Porcentaje: ");
+  Serial.println(tragoRecibido.bebida1Porcentaje);
+  Serial.print("\tBebida2: ");
+  Serial.print(tragoRecibido.bebida2);
+  Serial.print(" Porcentaje: ");
+  Serial.println(tragoRecibido.bebida2Porcentaje);
+
+  return tragoRecibido;
+}
+
+//Obtiene el pin que corresponde a esa bebida
+int getPin(char* bebida) {
+  if(strcmp(bebida, "FERNET") == 0)
+  return PIN_RELAY_FERNET;
+  else if(strcmp(bebida, "COCA") == 0)
+  return PIN_RELAY_COCA;
+  else if(strcmp(bebida, "RON") == 0)
+  return PIN_RELAY_RON;
+}
+
+//Setea pines x bebida y porcentajes de cada una
+ConfigTrago getConfig(Trago trago) {
+  ConfigTrago config;
+  config.pinBebida1 = getPin(trago.bebida1);
+  config.bebida1Porcentaje = trago.bebida1Porcentaje;
+  config.pinBebida2 = getPin(trago.bebida2);
+  config.bebida2Porcentaje = trago.bebida2Porcentaje;
+  config.pesoObjetivo = PESO_MAX * trago.bebida1Porcentaje / 100;
+  config.pinBebidaActual = config.pinBebida1;
+
+  Serial.println("[ESPERANDO_INPUT] Config seteada");
+  Serial.print("\tPin Bebida1: ");
+  Serial.print(config.pinBebida1);
+  Serial.print(" Porcentaje: ");
+  Serial.println(config.bebida1Porcentaje);
+  Serial.print("\tPin Bebida2: ");
+  Serial.print(config.pinBebida2);
+  Serial.print(" Porcentaje: ");
+  Serial.println(config.bebida2Porcentaje);
+  Serial.print("\tPeso objetivo: ");
+  Serial.println(config.pesoObjetivo);
+  Serial.print("\tPin bebida actual: ");
+  Serial.println(config.pinBebidaActual);
+
+  return config;
 }
 
 float getTemperatura() {
   return (5.0 * analogRead(PIN_SENSOR_TEMP) * 100.0) / 1024.0;
-}
-
-void encenderLed1() {
-  analogWrite(PIN_LED_1, 0);
-  analogWrite(PIN_LED_2, 255);
-  analogWrite(PIN_LED_3, 255);
-}
-
-void encenderLed2() {
-  analogWrite(PIN_LED_1, 255);
-  analogWrite(PIN_LED_2, 0);
-  analogWrite(PIN_LED_3, 255);
-}
-
-void encenderLed3() {
-  analogWrite(PIN_LED_1, 255);
-  analogWrite(PIN_LED_2, 255);
-  analogWrite(PIN_LED_3, 0);
 }
