@@ -31,18 +31,22 @@ Sistema embebido que prepara tragos de forma automatizada.
 El usuario deberá seleccionar en la aplicación Android el trago que desea tomar. A continuación, el sistema comenzará a preparar el trago de acuerdo a las preferencias del usuario (si es la primera vez, se hará con los valores por defecto). Una vez que el sistema terminó de preparar la bebida, avisará al usuario mediante la app y mediante el led que su trago está listo para retirar, notificándole si es necesario agregar hielo o no, de acuerdo a la temperatura de la bebida medida por el sistema. Posteriormente, en la aplicación se le realizarán al usuario distintas preguntas relacionadas a la preparación de la bebida (¿está frío?, ¿está muy fuerte/suave?, etc.). Luego de ingresadas las respuestas, el sistema actualizará las preferencias del usuario para la próxima vez y así obtener el trago perfecto para la persona.
 ## Diagramas de bloques
 ### Diagrama Funcional
-![Diagrama Funcional](https://b.imge.to/2019/09/23/vTNCMH.jpg)
+![Diagrama Funcional](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20Funcional.jpeg)
 ### Diagrama Físico
-![Diagrama Físico](https://b.imge.to/2019/09/23/vTNsIH.jpg)
+![Diagrama Físico](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20Fisico.jpeg)
+### Diagrama Lógico 
+![Diagrama Funcional](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20Logico.jpeg)
+### Diagrama Software
+![Diagrama Físico](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20SW.jpeg)
+
 ### Esquema Físico
-#### Vista Frontal
-![Vista Frontal](https://b.imge.to/2019/09/23/vTdidt.jpg)
+#### Vista Exterior
+![Vista Exterior](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20Exterior.jpg)
+#### Vista Interior y Balanza
+![Vista Interior](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20Interior%20y%20Balanza.jpg)
 
-
-#### Vista Lateral
-![Vista Lateral](https://b.imge.to/2019/09/23/vTdDPy.jpg)
 ### Diagrama de Conexión
-![Diagrama Físico](https://a.imge.to/2019/09/23/vTdWLx.jpg)
+![Diagrama Físico](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20de%20Conexi%C3%B3n.jpg)
 
 #### Descripción de Aplicación de Android
 
