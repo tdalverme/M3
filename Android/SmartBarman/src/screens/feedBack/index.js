@@ -27,26 +27,25 @@ const styles = StyleSheet.create({
 
 let realm;
 export default class RegisterScreen extends PureComponent {
-  state = {
-    value : 0,
-    textColor :1
-
-  };
-
   constructor(props) {
     super(props);
     realm = new Realm({ path: 'UserDatabase.realm' });
     this.navigation = props.navigation;
     const temperature = this.navigation.getParam('temperature', '');
+    const bebida = this.navigation.getParam('bebida', '');
     this.state = {
-      temperature
+      temperature,
+      bebida,
+      value: 0,
+      textColor: 1,
     };
   }
 
   actualizarGraduacion = () =>{
     const valor = -this.state.value;
+    const { bebida } = this.state;
     realm = new Realm({ path: 'UserDatabase.realm' });
-    this.bebida = realm.objects('Drink').filter(aux=>aux.name == 'Fernet con Coca')[0];
+    this.bebida = realm.objects('Drink').filter(aux=>aux.name == bebida)[0];
     realm.write(() => {
       this.bebida.ingredient1Percentage = this.bebida.ingredient1Percentage + parseInt(valor);
     });

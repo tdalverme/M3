@@ -3,7 +3,6 @@ import Navigation from './src/Navigation';
 
 const Realm = require('realm');
 
-// Realm.deleteFile({ path: 'UserDatabase.realm'})
 const UserSchema = {
   name: 'User',
   properties: {

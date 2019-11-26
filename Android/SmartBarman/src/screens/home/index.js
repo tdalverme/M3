@@ -31,7 +31,7 @@ class Home extends Component {
     drink: '',
     temperature: '',
     porcentaje: null,
-    luz : 'LED_OFF',
+    luz : '#LED_OFF@',
     currentDrink: 0,
     bebidas: []
   };
@@ -65,11 +65,13 @@ class Home extends Component {
 
     SensorManager.startLightSensor(100);
     DeviceEventEmitter.addListener('LightSensor', function (data) {
-      if(data.light < 50){
-        actualizarLuz('LED_ON')
-        SensorManager.stopLightSensor();
-        DeviceEventEmitter.removeListener('LightSensor');
+      if(data.light < 50) {
+        actualizarLuz('#LED_ON@')
+      } else {
+        actualizarLuz('#LED_OFF@')
       }
+      SensorManager.stopLightSensor();
+      DeviceEventEmitter.removeListener('LightSensor');
     });
 
     if(this.props.navigation.getParam('tragoAuto')){

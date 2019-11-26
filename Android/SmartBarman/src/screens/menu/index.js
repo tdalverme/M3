@@ -133,7 +133,7 @@ const Menu = ({ navigation }) => {
         ingredient1: 'RON',
         ingredient1Percentage: 30,
         ingredient2: 'COCA',
-        graduacionAlc: 39,
+        graduacionAlc: 37,
       });
     }
   });

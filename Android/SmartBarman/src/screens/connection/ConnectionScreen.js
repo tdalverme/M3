@@ -62,7 +62,10 @@ class ConnectionScreen extends PureComponent {
     this.findDevices();
     this.events.on("bluetoothEnabled", () => {
       ToastAndroid.show("Bluetooth activado.", ToastAndroid.SHORT);
-      this.setState({ isEnabled: true });
+      this.setState({ isEnabled: true }, () => {
+        console.warn('seteo state');
+        this.findDevices();
+      });
     });
 
     this.events.on("bluetoothDisabled", () => {
@@ -97,6 +100,12 @@ class ConnectionScreen extends PureComponent {
   }
 
   findDevices = async () => {
+    PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION)
+    .then(result => {
+      if (!result) {
+        PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION);
+      }
+    });
     try {
       this.setState({ processing: true, message: 'Conectando con SmartBarman' });
 
@@ -111,7 +120,18 @@ class ConnectionScreen extends PureComponent {
           this.setState({device: arduinoBluetooth});
           this.connect(arduinoBluetooth.id);
         } else {
-          this.setState({message: 'No está conectado a SmartBarman. Revise en sus dispositivos bluethooth vinculados.',processing: false})
+          const unpairedDevicesList = await BluetoothSerial.listUnpaired();
+          console.warn(unpairedDevicesList);
+          const unpairedArduino = unpairedDevicesList.filter((device) => device.name === 'HC-05')[0];
+          console.warn('unpairedArduino', unpairedArduino);
+          if(unpairedArduino) {
+            this.setState({message: 'Emparejando con SmartBarman'}, async () => {
+              await BluetoothSerial.pairDevice(unpairedArduino.id);
+              this.findDevices();
+            });
+          } else {
+            this.setState({message: 'No está conectado a SmartBarman. Revise en sus dispositivos bluethooth vinculados.',processing: false})
+          }
         }
       }else{
         this.setState({message: 'Active su Bluetooth y conectese con SmartBarman',processing: false})
@@ -121,8 +141,6 @@ class ConnectionScreen extends PureComponent {
     }
 
   }
-
-
 
   connect = async id => {
     try {
@@ -146,28 +164,6 @@ class ConnectionScreen extends PureComponent {
       this.setState({ processing: false, connected: false });
     }
   };
-
-  // askForPermissions = async () => {
-  //   try {
-  //     const granted = await PermissionsAndroid.request(
-  //       PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
-  //       {
-  //         title: 'Acceso a la ubicación',
-  //         message:
-  //           'Para poder conectar el bluetooth necesitamos acceso a la ubicación',
-  //         buttonNegative: 'No quiero conectarme',
-  //         buttonPositive: 'OK',
-  //       },
-  //     );
-  //     if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-  //       this.scanAndConnect();
-  //     } else {
-  //       console.warn('Location permission denied');
-  //     }
-  //   } catch (err) {
-  //     console.warn(err);
-  //   }
-  // }
 
   render() {
     const {processing,message } = this.state;

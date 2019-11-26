@@ -121,7 +121,7 @@ class HomeScreen extends PureComponent {
 
           </View>
           <View style={{ flex: 0.5, justifyContent: 'flex-end' }}>
-            <GlassDetectedMessage detected={glassDetected} filling={filling} />
+            {!filling && <GlassDetectedMessage detected={glassDetected} filling={filling} />}
           </View>
         </ImageBackground>
       </View>
