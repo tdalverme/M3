@@ -19,12 +19,12 @@ int segundoTopeEnGramos;
 boolean finished;
 int estadoSirviendoBebida;
 float pesoActual;
-int cantMediciones = 0;
-float sumadorTemp = 0;
+int cantMediciones;
+float sumadorTemp;
 float temperatura;
-boolean msgStarted = false;
-boolean isCloseEnough = false;
-boolean ledOn = true;
+boolean msgStarted;
+boolean isCloseEnough;
+boolean ledOn;
 /****************************************/
 
 void setup() {
@@ -46,7 +46,14 @@ void setup() {
 
   estadoActual = STATE_ESPERANDO_INPUT;
   estadoSirviendoBebida = STATE_RELAY_OFF;
+  
+  cantMediciones = 0;
+  sumadorTemp = 0;
+  msgStarted = false;
+  isCloseEnough = false;
+  ledOn = true;
   encenderLed(COLOR_ROJO);
+
 
   Serial.println("[SETUP] Setup terminado");
   Serial.println("[ESPERANDO_INPUT] Esperando datos por bluetooth");
@@ -107,7 +114,7 @@ void handleEsperandoInput() {
 
 //2000 ms => 10g
 //x    ms => 60g    12000 ms => 60g
-//primerIncremental = 60g * 2000 / 10 = 12000s
+//primerIncremental = (60g * 2000 / 10) / 2 = (12000ms) / 2 = 6000ms
 //60g ~= 30g + 15g + 10g +10g
 /****************************************/
 
@@ -126,8 +133,8 @@ void handleEsperandoVaso() {
     Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
     primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
     segundoTopeEnGramos = (int ) PESO_MAX / 100 * config.bebida2Porcentaje; //Seria el PESO_MAX
-    primerIncremental = (int) (primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
-    segundoIncremental = (int) (segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS;
+    primerIncremental = (int) ((primerTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS) / 2;
+    segundoIncremental = (int) ((segundoTopeEnGramos * MINIMO_SERVIDO_TIEMPO) / MINIMO_SERVIDO_GRAMOS) / 2;
     incremental = primerIncremental;
     finished = false;
 
@@ -252,8 +259,6 @@ void siguienteBebida() {
 }
 
 void log_float(String msg, float n, String unit) {
-  String now = "[" + String(millis() / 1000) + "s] ";
-  Serial.print(now);
   Serial.print(msg);
   Serial.print(n);
   Serial.println(unit);
