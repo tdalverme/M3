@@ -48,6 +48,15 @@ El usuario deberá seleccionar en la aplicación Android el trago que desea toma
 ### Diagrama de Conexión
 ![Diagrama Físico](https://github.com/tdalverme/M3/blob/master/Sistema-Embebido/Diagrama%20de%20Conexi%C3%B3n.jpg)
 
+#### Firmware
+- Estados - Funciones Realizadas: 
+     - Esperando solicitud: Corroboramos la conexión vía Bluetooth con el Smartphone, recibimos el pedido correspondiente. 
+     - Esperando el vaso en posición: Detectamos si el vaso está o no en posición para comenzar con el trago.
+     - Sirviendo Bebida: Servimos la bebida solicitada, manejando los tiempos de las bombas y calculando el peso, para realizar los cambios de bebidas del trago y finalizar con la misma. 
+     - Bebida Finalizada: Calculamos la temperatura de la bebida, y damos por finalizado el trago solicitado. 
+     - Notificar Bebida Lista: En este estado damos el aviso auditivamente que el trago está listo, e informamos de la finalización y la temperatura del trago al Smartphone. 
+
+
 #### Descripción de Aplicación de Android
 
 Para utilizar Smart Barman únicamente podrá realizarlo a través de la aplicación en Android, en la cual el usuario podrá crear su perfil, seleccionar las bebidas que desee, indicando como resulto la experiencia con cada trago y Smart Barman adecuando las próximas bebidas que pida, para así obtener el trago perfecto para cada persona. También la aplicación le informara la temperatura del trago, el nivel de alcohol en sangre, y si esta apto o no para conducir. Los sensores utilizados del Smartphone son: 
@@ -56,6 +65,8 @@ Para utilizar Smart Barman únicamente podrá realizarlo a través de la aplicac
 - Luz: Para encender el Led del embebido.
 
 Para comunicarnos con Smart Barman, lo hacemos a través del Bluetooth, para solicitar una bebida e interactuar con el embebido tenemos que estar vinculados con el Bluetooth.
+
+El desarrollo de la aplicación se realizó sobre React Native, que es un framework JavaScript para crear aplicaciones reales nativas para iOS y Android, basado en la librearía de JavaScript React para crear componentes visuales.
 
 #### Manual de Usuario
 
@@ -86,3 +97,8 @@ Para comunicarnos con Smart Barman, lo hacemos a través del Bluetooth, para sol
           - Fuerte (próxima bebida con menor graduación alcohólica)         
 8.	Opción: **Ver mi estado alcohólico**, para consultar el historial de bebidas consumidas y el nivel de alcohol en sangre, mostrará el estado alcohólico en base a la información de las últimas 8 horas. 
 9.	Opción: **Editar mis datos**, dentro de esta opción podrá editar la información del perfil (Nombre, Altura y Peso)
+
+#### Conclusiones: 
+Para seguir evolucionando el prototipo desarrollado, pensamos en un futuro cambiar las bombas de agua utilizadas, por otro tipo de bombas de agua que no tengan que estar en contacto con el líquido. Por ejemplo, bomba de líquido peristáltica. 
+También, agregar más bombas de agua para tener más variedad de bebidas, y que el usuario pueda combinar las bebidas a su gusto, pudiendo innovar en el preparado de las mismas y que no sean tragos clásicos. 
+
