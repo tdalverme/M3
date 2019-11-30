@@ -9,6 +9,7 @@ HX711 scale;
 int estadoActual;
 String bluetoothMsg;
 unsigned long previousMillis;
+unsigned long previousMicros;
 Trago tragoSeleccionado;
 ConfigTrago config;
 int primerIncremental;
@@ -23,7 +24,7 @@ int cantMediciones;
 float sumadorTemp;
 float temperatura;
 boolean msgStarted;
-boolean isCloseEnough;
+int isCloseEnough;
 boolean ledOn;
 /****************************************/
 
@@ -50,7 +51,7 @@ void setup() {
   cantMediciones = 0;
   sumadorTemp = 0;
   msgStarted = false;
-  isCloseEnough = false;
+  isCloseEnough = MEASURE_NOT_READY;
   ledOn = true;
   encenderLed(COLOR_ROJO);
 
@@ -120,15 +121,24 @@ void handleEsperandoInput() {
 
 void handleEsperandoVaso() {
 
-  if(millisPassed(500)) {
+  if(millisPassed(TIEMPO_ENTRE_MEDICIONES_ULTRASONIDO)) {
     isCloseEnough = glassIsCloseEnough();
-    if(!isCloseEnough) {
+
+    if(isCloseEnough == GLASS_IS_CLOSE) {
+      sendMessage("detected|true");
+      Serial.println("[ESPERANDO_VASO] Vaso detectado");
+      resetMillis();
+    }
+    else if(isCloseEnough == GLASS_NOT_CLOSE) {
       sendMessage("detected|false");
       Serial.println("[ESPERANDO_VASO] Vaso no detectado");
       resetMillis();
+    } else if(isCloseEnough == MEASURE_NOT_READY) {
+      sendMessage("detected|false");
+      Serial.println("[ESPERANDO_VASO] La medicion no esta lista");
     }
   }
-  if(millisPassed(2500) && isCloseEnough) {
+  if(millisPassed(TIEMPO_DETECTANDO_VASO) && isCloseEnough) {
     isCloseEnough = false;
     Serial.println("[SIRVIENDO_BEBIDA] Calculando proporciones");
     primerTopeEnGramos = (int) PESO_MAX / 100 * config.bebida1Porcentaje;
@@ -171,14 +181,14 @@ void handleSirviendoBebida() {
           }
           break;
         case STATE_GETTING_WEIGHT:
-          if(millisPassed(2500 + incremental)) {
+          if(millisPassed(TIEMPO_RESET_BALANZA + incremental)) {
             log_float("[SIRVIENDO_BEBIDA][WEIGHT] Se espero hasta: ", millis() - previousMillis, "ms");
             pesoActual = getWeight();
             estadoSirviendoBebida = STATE_RELAY_ON;
           }
           break;
         case STATE_RELAY_ON:
-          if(millisPassed(5000 + incremental)){
+          if(millisPassed(TIEMPO_RESET_RELE + incremental)){
             log_float("[SIRVIENDO_BEBIDA][RELE_ON] Time since last measure: ", millis() - previousMillis, "ms");
             if(pesoActual >= PESO_MAX){
               finished = true;
@@ -239,7 +249,6 @@ void handleNotificarBebidaLista() {
 }
 
 
-
                 /*UTILS*/
 /****************************************/
 void encenderRelay(int pin) {
@@ -266,33 +275,41 @@ void log_float(String msg, float n, String unit) {
 
 float getWeight() {
   float pesoActual;
-  for(int i = 0; i < 10; i++){
+  for(int i = 0; i < CANT_MEDICIONES_BALANZA; i++){
     pesoActual = scale.get_units(3);
-    if( pesoActual >= 0)
-    break;
+    if(pesoActual >= 0)
+      break;
     else
-    pesoActual = -999;
+      pesoActual = ERROR_PESO;
   }
   log_float("\t\tPeso actual: ", pesoActual, "g");
   return pesoActual;
 }
 
-boolean glassIsCloseEnough() {
+int glassIsCloseEnough() {
   // Clears the trigPin
   digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
-  delayMicroseconds(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(PIN_ULTRASONIDO_TRIG, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  long duration = pulseIn(PIN_ULTRASONIDO_ECHO, HIGH);
-  // Calculating the distance
-  long distance = duration * 0.034/2;
-  Serial.print("[ESPERANDO_VASO] Distance: ");
-  Serial.println(distance);
+  if(microsPassed(TIEMPO_RESET_ULTRASONIDO)) {
+    // Sets the trigPin on HIGH state for 10 micro seconds
+    digitalWrite(PIN_ULTRASONIDO_TRIG, HIGH);
 
-  return (distance <= DISTANCIA_VASO_MAX);
+    if(microsPassed(TIEMPO_TRIGGER_ULTRASONIDO)) {
+      digitalWrite(PIN_ULTRASONIDO_TRIG, LOW);
+      // Reads the echoPin, returns the sound wave travel time in microseconds
+      long duration = pulseIn(PIN_ULTRASONIDO_ECHO, HIGH);
+      // Calculating the distance
+      long distance = duration * VELOCIDAD_SONIDO / 2;
+      Serial.print("[ESPERANDO_VASO] Distance: ");
+      Serial.println(distance);
+      resetMicros();
+      return (distance <= DISTANCIA_VASO_MAX) ? GLASS_IS_CLOSE : GLASS_NOT_CLOSE;
+    }
+    else {
+      return MEASURE_NOT_READY;
+    }
+  }
+
+  return MEASURE_NOT_READY;;
 }
 
 
@@ -302,6 +319,14 @@ boolean millisPassed(long n) {
 
 void resetMillis() {
   previousMillis = millis();
+}
+
+boolean microsPassed(long n) {
+  return micros() - previousMicros >= n;
+}
+
+void resetMicros() {
+  previousMicros = micros();
 }
 
 void encenderLed(int color) {
@@ -345,8 +370,8 @@ void btFlush(){
 }
 
 int getBluetoothMsg() {
-  if(BT.available()) {
-    delay(50);
+  if(BT.available() && millisPassed(TIEMPO_ENTRE_CARACTERES)) {
+    resetMillis();
     char c = BT.read();
 
     if(c == '#'){
@@ -446,5 +471,5 @@ ConfigTrago getConfig(Trago trago) {
 }
 
 float getTemperatura() {
-  return (5.0 * analogRead(PIN_SENSOR_TEMP) * 100.0) / 1024.0;
+  return (MILIVOLTS_A_CELSIUS * analogRead(PIN_SENSOR_TEMP) * 100.0);
 }
